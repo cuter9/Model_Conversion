@@ -1,0 +1,2 @@
+/home/cuterbot/Model_Conversion/SSD_Work_Space/ssd_tf_onnx_trt_extdir.py:604: DeprecationWarning: Use build_serialized_network instead.
+  engine = builder.build_engine(network, config)

@@ -1,0 +1,10 @@
+^CTraceback (most recent call last):
+  File "/home/cuterbot/Model_Conversion/ssd_tf_onnx_trt.py", line 7, in <module>
+    import tensorrt as trt
+  File "/usr/lib/python3.6/dist-packages/tensorrt/__init__.py", line 34, in <module>
+    try_load(lib)
+  File "/usr/lib/python3.6/dist-packages/tensorrt/__init__.py", line 26, in try_load
+    ctypes.CDLL(library)
+  File "/usr/lib/python3.6/ctypes/__init__.py", line 348, in __init__
+    self._handle = _dlopen(self._name, mode)
+KeyboardInterrupt

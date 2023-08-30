@@ -1,0 +1,209 @@
+2023-06-06 01:28:26.032660: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.10.2
+WARNING:tensorflow:Deprecation warnings have been disabled. Set TF_ENABLE_DEPRECATION_WARNINGS=1 to re-enable them.
+ssd_mobilenet_v2_coco_2018_03_29.tar.gz found. Proceed.
+ssd_mobilenet_v2_coco_2018_03_29 found. Proceed.
+[06/06/2023-01:29:11] [TRT] [I] [MemUsageChange] Init CUDA: CPU +229, GPU -8, now: CPU 380, GPU 3884 (MiB)
+[06/06/2023-01:29:13] [TRT] [I] [MemUsageSnapshot] Begin constructing builder kernel library: CPU 380 MiB, GPU 3878 MiB
+[06/06/2023-01:29:14] [TRT] [I] [MemUsageSnapshot] End constructing builder kernel library: CPU 410 MiB, GPU 3899 MiB
+
+
+------ trt starts parsing onnx model
+[06/06/2023-01:29:14] [TRT] [I] ----------------------------------------------------------------
+[06/06/2023-01:29:14] [TRT] [I] Input filename:   /home/cuterbot/Model_Conversion/Onnx_Work_Space/Model_Rep/ssd_mobilenet_v2_coco_2018_03_29_new.onnx
+[06/06/2023-01:29:14] [TRT] [I] ONNX IR version:  0.0.8
+[06/06/2023-01:29:14] [TRT] [I] Opset version:    15
+[06/06/2023-01:29:14] [TRT] [I] Producer name:    tf2onnx
+[06/06/2023-01:29:14] [TRT] [I] Producer version: 1.14.0 8f8d49
+[06/06/2023-01:29:14] [TRT] [I] Domain:           
+[06/06/2023-01:29:14] [TRT] [I] Model version:    0
+[06/06/2023-01:29:14] [TRT] [I] Doc string:       
+[06/06/2023-01:29:14] [TRT] [I] ----------------------------------------------------------------
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::GridAnchor_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::GridAnchorRect_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::NMS_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::Reorg_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::Region_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::Clip_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::LReLU_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::PriorBox_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::Normalize_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::ScatterND version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::RPROI_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::BatchedNMS_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::BatchedNMSDynamic_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::FlattenConcat_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::CropAndResize version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::DetectionLayer_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::EfficientNMS_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::EfficientNMS_ONNX_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::EfficientNMS_TFTRT_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::Proposal version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::ProposalLayer_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::PyramidROIAlign_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::ResizeNearest_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::Split version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::SpecialSlice_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Registered plugin creator - ::InstanceNormalization_TRT version 1
+[06/06/2023-01:29:14] [TRT] [V] Adding network input: input:0 with dtype: float32, dimensions: (1, 300, 300, 3)
+[06/06/2023-01:29:14] [TRT] [V] Registering tensor: input:0 for ONNX tensor: input:0
+[06/06/2023-01:29:14] [TRT] [V] Parsing node: priorbox [GridAnchor_TRT]
+[06/06/2023-01:29:14] [TRT] [V] Searching for input: input:0
+[06/06/2023-01:29:14] [TRT] [V] priorbox [GridAnchor_TRT] inputs: [input:0 -> (1, 300, 300, 3)[FLOAT]], 
+[06/06/2023-01:29:14] [TRT] [I] No importer registered for op: GridAnchor_TRT. Attempting to import as plugin.
+[06/06/2023-01:29:14] [TRT] [I] Searching for plugin: GridAnchor_TRT, plugin_version: 1, plugin_namespace: 
+[06/06/2023-01:29:14] [TRT] [I] Successfully created plugin: GridAnchor_TRT
+[06/06/2023-01:29:15] [TRT] [V] Registering layer: priorbox for ONNX node: priorbox
+[06/06/2023-01:29:15] [TRT] [V] Registering tensor: priorbox_new:0 for ONNX tensor: priorbox_new:0
+[06/06/2023-01:29:15] [TRT] [V] Registering tensor: priorbox_new:1 for ONNX tensor: priorbox_new:1
+[06/06/2023-01:29:15] [TRT] [V] Registering tensor: priorbox_new:2 for ONNX tensor: priorbox_new:2
+[06/06/2023-01:29:15] [TRT] [V] Registering tensor: priorbox_new:3 for ONNX tensor: priorbox_new:3
+[06/06/2023-01:29:15] [TRT] [V] Registering tensor: priorbox_new:4 for ONNX tensor: priorbox_new:4
+[06/06/2023-01:29:15] [TRT] [V] Registering tensor: priorbox_new:5 for ONNX tensor: priorbox_new:5
+[06/06/2023-01:29:15] [TRT] [V] priorbox [GridAnchor_TRT] outputs: [priorbox_new:0 -> (1, 2, 4332, 1)[FLOAT]], [priorbox_new:1 -> (1, 2, 2400, 1)[FLOAT]], [priorbox_new:2 -> (1, 2, 600, 1)[FLOAT]], [priorbox_new:3 -> (1, 2, 216, 1)[FLOAT]], [priorbox_new:4 -> (1, 2, 96, 1)[FLOAT]], [priorbox_new:5 -> (1, 2, 24, 1)[FLOAT]], 
+[06/06/2023-01:29:15] [TRT] [V] Parsing node: priorbox_concat_new [Concat]
+[06/06/2023-01:29:15] [TRT] [V] Searching for input: priorbox_new:0
+[06/06/2023-01:29:15] [TRT] [V] Searching for input: priorbox_new:1
+[06/06/2023-01:29:15] [TRT] [V] Searching for input: priorbox_new:2
+[06/06/2023-01:29:15] [TRT] [V] Searching for input: priorbox_new:3
+[06/06/2023-01:29:15] [TRT] [V] Searching for input: priorbox_new:4
+[06/06/2023-01:29:15] [TRT] [V] Searching for input: priorbox_new:5
+[06/06/2023-01:29:15] [TRT] [V] priorbox_concat_new [Concat] inputs: [priorbox_new:0 -> (1, 2, 4332, 1)[FLOAT]], [priorbox_new:1 -> (1, 2, 2400, 1)[FLOAT]], [priorbox_new:2 -> (1, 2, 600, 1)[FLOAT]], [priorbox_new:3 -> (1, 2, 216, 1)[FLOAT]], [priorbox_new:4 -> (1, 2, 96, 1)[FLOAT]], [priorbox_new:5 -> (1, 2, 24, 1)[FLOAT]], 
+[06/06/2023-01:29:15] [TRT] [V] Registering layer: priorbox_concat_new for ONNX node: priorbox_concat_new
+[06/06/2023-01:29:15] [TRT] [V] Registering tensor: priorbox_concat_new:0_0 for ONNX tensor: priorbox_concat_new:0
+[06/06/2023-01:29:15] [TRT] [V] priorbox_concat_new [Concat] outputs: [priorbox_concat_new:0 -> (1, 2, 7668, 1)[FLOAT]], 
+[06/06/2023-01:29:15] [TRT] [V] Marking priorbox_concat_new:0_0 as output: priorbox_concat_new:0
+
+
+--- start trt engine construction 
+[06/06/2023-01:29:15] [TRT] [V] Applying generic optimizations to the graph for inference.
+[06/06/2023-01:29:15] [TRT] [V] Original: 2 layers
+[06/06/2023-01:29:15] [TRT] [V] After dead-layer removal: 2 layers
+[06/06/2023-01:29:15] [TRT] [V] After Myelin optimization: 2 layers
+[06/06/2023-01:29:15] [TRT] [V] Applying ScaleNodes fusions.
+[06/06/2023-01:29:15] [TRT] [V] After scale fusion: 2 layers
+[06/06/2023-01:29:15] [TRT] [V] After vertical fusions: 2 layers
+[06/06/2023-01:29:15] [TRT] [V] After dupe layer removal: 2 layers
+[06/06/2023-01:29:15] [TRT] [V] After final dead-layer removal: 2 layers
+[06/06/2023-01:29:15] [TRT] [V] After tensor merging: 2 layers
+[06/06/2023-01:29:15] [TRT] [V] Eliminating concatenation priorbox_concat_new
+[06/06/2023-01:29:15] [TRT] [V] Generating copy for priorbox_new:0 to priorbox_concat_new:0 because input does not support striding.
+[06/06/2023-01:29:15] [TRT] [V] Generating copy for priorbox_new:1 to priorbox_concat_new:0 because input does not support striding.
+[06/06/2023-01:29:15] [TRT] [V] Generating copy for priorbox_new:2 to priorbox_concat_new:0 because input does not support striding.
+[06/06/2023-01:29:15] [TRT] [V] Generating copy for priorbox_new:3 to priorbox_concat_new:0 because input does not support striding.
+[06/06/2023-01:29:15] [TRT] [V] Generating copy for priorbox_new:4 to priorbox_concat_new:0 because input does not support striding.
+[06/06/2023-01:29:15] [TRT] [V] Generating copy for priorbox_new:5 to priorbox_concat_new:0 because input does not support striding.
+[06/06/2023-01:29:15] [TRT] [V] After concat removal: 7 layers
+[06/06/2023-01:29:15] [TRT] [V] Graph construction and optimization completed in 0.0547723 seconds.
+[06/06/2023-01:29:15] [TRT] [I] ---------- Layers Running on DLA ----------
+[06/06/2023-01:29:15] [TRT] [I] ---------- Layers Running on GPU ----------
+[06/06/2023-01:29:15] [TRT] [I] [GpuLayer] priorbox
+[06/06/2023-01:29:15] [TRT] [I] [GpuLayer] priorbox_new:0 copy
+[06/06/2023-01:29:15] [TRT] [I] [GpuLayer] priorbox_new:1 copy
+[06/06/2023-01:29:15] [TRT] [I] [GpuLayer] priorbox_new:2 copy
+[06/06/2023-01:29:15] [TRT] [I] [GpuLayer] priorbox_new:3 copy
+[06/06/2023-01:29:15] [TRT] [I] [GpuLayer] priorbox_new:4 copy
+[06/06/2023-01:29:15] [TRT] [I] [GpuLayer] priorbox_new:5 copy
+[06/06/2023-01:29:24] [TRT] [V] Using cublas as a tactic source
+[06/06/2023-01:29:24] [TRT] [I] [MemUsageChange] Init cuBLAS/cuBLASLt: CPU +158, GPU +14, now: CPU 586, GPU 3911 (MiB)
+[06/06/2023-01:29:24] [TRT] [V] Using cuDNN as a tactic source
+[06/06/2023-01:29:38] [TRT] [I] [MemUsageChange] Init cuDNN: CPU +241, GPU -28, now: CPU 827, GPU 3883 (MiB)
+[06/06/2023-01:29:40] [TRT] [I] Local timing cache in use. Profiling results in this builder pass will not be stored.
+[06/06/2023-01:29:40] [TRT] [V] Constructing optimization profile number 0 [1/1].
+[06/06/2023-01:29:40] [TRT] [V] Reserving memory for activation tensors. Host: 0 bytes Device: 1141344 bytes
+[06/06/2023-01:29:40] [TRT] [V] =============== Computing reformatting costs
+[06/06/2023-01:29:40] [TRT] [V] =============== Computing reformatting costs
+[06/06/2023-01:29:40] [TRT] [V] =============== Computing reformatting costs
+[06/06/2023-01:29:40] [TRT] [V] =============== Computing reformatting costs
+[06/06/2023-01:29:40] [TRT] [V] =============== Computing reformatting costs
+[06/06/2023-01:29:40] [TRT] [V] =============== Computing reformatting costs
+[06/06/2023-01:29:40] [TRT] [V] =============== Computing reformatting costs
+[06/06/2023-01:29:40] [TRT] [V] =============== Computing reformatting costs
+[06/06/2023-01:29:40] [TRT] [V] *************** Autotuning Reformat: Float(8664,4332,1,1) -> Float(15336,7668,1,1) ***************
+[06/06/2023-01:29:40] [TRT] [V] --------------- Timing Runner: priorbox_new:0 copy (Reformat)
+[06/06/2023-01:29:40] [TRT] [V] Tactic: 1002 Time: 0.101927
+[06/06/2023-01:29:40] [TRT] [V] Tactic: 0 Time: 0.08776
+[06/06/2023-01:29:40] [TRT] [V] Fastest Tactic: 0 Time: 0.08776
+[06/06/2023-01:29:40] [TRT] [V] >>>>>>>>>>>>>>> Chose Runner Type: Reformat Tactic: 0
+[06/06/2023-01:29:40] [TRT] [V] =============== Computing reformatting costs
+[06/06/2023-01:29:40] [TRT] [V] *************** Autotuning Reformat: Float(4800,2400,1,1) -> Float(15336,7668,1,1) ***************
+[06/06/2023-01:29:40] [TRT] [V] --------------- Timing Runner: priorbox_new:1 copy (Reformat)
+[06/06/2023-01:29:40] [TRT] [V] Tactic: 1002 Time: 0.070782
+[06/06/2023-01:29:40] [TRT] [V] Tactic: 0 Time: 0.054896
+[06/06/2023-01:29:40] [TRT] [V] Fastest Tactic: 0 Time: 0.054896
+[06/06/2023-01:29:40] [TRT] [V] >>>>>>>>>>>>>>> Chose Runner Type: Reformat Tactic: 0
+[06/06/2023-01:29:40] [TRT] [V] =============== Computing reformatting costs
+[06/06/2023-01:29:40] [TRT] [V] *************** Autotuning Reformat: Float(1200,600,1,1) -> Float(15336,7668,1,1) ***************
+[06/06/2023-01:29:40] [TRT] [V] --------------- Timing Runner: priorbox_new:2 copy (Reformat)
+[06/06/2023-01:29:40] [TRT] [V] Tactic: 1002 Time: 0.04073
+[06/06/2023-01:29:40] [TRT] [V] Tactic: 0 Time: 0.026406
+[06/06/2023-01:29:40] [TRT] [V] Fastest Tactic: 0 Time: 0.026406
+[06/06/2023-01:29:40] [TRT] [V] >>>>>>>>>>>>>>> Chose Runner Type: Reformat Tactic: 0
+[06/06/2023-01:29:40] [TRT] [V] =============== Computing reformatting costs
+[06/06/2023-01:29:40] [TRT] [V] *************** Autotuning Reformat: Float(432,216,1,1) -> Float(15336,7668,1,1) ***************
+[06/06/2023-01:29:40] [TRT] [V] --------------- Timing Runner: priorbox_new:3 copy (Reformat)
+[06/06/2023-01:29:40] [TRT] [V] Tactic: 1002 Time: 0.209792
+[06/06/2023-01:29:40] [TRT] [V] Tactic: 0 Time: 0.025625
+[06/06/2023-01:29:40] [TRT] [V] Fastest Tactic: 0 Time: 0.025625
+[06/06/2023-01:29:40] [TRT] [V] >>>>>>>>>>>>>>> Chose Runner Type: Reformat Tactic: 0
+[06/06/2023-01:29:40] [TRT] [V] =============== Computing reformatting costs
+[06/06/2023-01:29:40] [TRT] [V] *************** Autotuning Reformat: Float(192,96,1,1) -> Float(15336,7668,1,1) ***************
+[06/06/2023-01:29:40] [TRT] [V] --------------- Timing Runner: priorbox_new:4 copy (Reformat)
+[06/06/2023-01:29:40] [TRT] [V] Tactic: 1002 Time: 0.12875
+[06/06/2023-01:29:40] [TRT] [V] Tactic: 0 Time: 0.025677
+[06/06/2023-01:29:40] [TRT] [V] Fastest Tactic: 0 Time: 0.025677
+[06/06/2023-01:29:40] [TRT] [V] >>>>>>>>>>>>>>> Chose Runner Type: Reformat Tactic: 0
+[06/06/2023-01:29:40] [TRT] [V] =============== Computing reformatting costs
+[06/06/2023-01:29:40] [TRT] [V] *************** Autotuning Reformat: Float(48,24,1,1) -> Float(15336,7668,1,1) ***************
+[06/06/2023-01:29:40] [TRT] [V] --------------- Timing Runner: priorbox_new:5 copy (Reformat)
+[06/06/2023-01:29:40] [TRT] [V] Tactic: 1002 Time: 0.076667
+[06/06/2023-01:29:40] [TRT] [V] Tactic: 0 Time: 0.025417
+[06/06/2023-01:29:40] [TRT] [V] Fastest Tactic: 0 Time: 0.025417
+[06/06/2023-01:29:40] [TRT] [V] >>>>>>>>>>>>>>> Chose Runner Type: Reformat Tactic: 0
+[06/06/2023-01:29:40] [TRT] [V] =============== Computing costs for 
+[06/06/2023-01:29:40] [TRT] [V] *************** Autotuning format combination: Float(270000,900,3,1) -> Float(8664,4332,1,1), Float(4800,2400,1,1), Float(1200,600,1,1), Float(432,216,1,1), Float(192,96,1,1), Float(48,24,1,1) ***************
+[06/06/2023-01:29:40] [TRT] [V] Formats and tactics selection completed in 0.368908 seconds.
+[06/06/2023-01:29:40] [TRT] [V] After reformat layers: 7 layers
+[06/06/2023-01:29:40] [TRT] [V] Pre-optimized block assignment.
+[06/06/2023-01:29:40] [TRT] [V] Block size 34816
+[06/06/2023-01:29:40] [TRT] [V] Block size 19456
+[06/06/2023-01:29:40] [TRT] [V] Block size 5120
+[06/06/2023-01:29:40] [TRT] [V] Block size 2048
+[06/06/2023-01:29:40] [TRT] [V] Block size 1024
+[06/06/2023-01:29:40] [TRT] [V] Block size 512
+[06/06/2023-01:29:40] [TRT] [V] Block size 1073741824
+[06/06/2023-01:29:40] [TRT] [V] Total Activation Memory: 1073804800
+[06/06/2023-01:29:40] [TRT] [I] Detected 1 inputs and 7 output network tensors.
+[06/06/2023-01:29:40] [TRT] [V] Layer: priorbox Host Persistent: 56 Device Persistent: 0 Scratch Memory: 0
+[06/06/2023-01:29:40] [TRT] [V] Layer: priorbox_new:0 copy Host Persistent: 0 Device Persistent: 0 Scratch Memory: 0
+[06/06/2023-01:29:40] [TRT] [V] Layer: priorbox_new:1 copy Host Persistent: 0 Device Persistent: 0 Scratch Memory: 0
+[06/06/2023-01:29:40] [TRT] [V] Layer: priorbox_new:2 copy Host Persistent: 0 Device Persistent: 0 Scratch Memory: 0
+[06/06/2023-01:29:40] [TRT] [V] Layer: priorbox_new:3 copy Host Persistent: 0 Device Persistent: 0 Scratch Memory: 0
+[06/06/2023-01:29:40] [TRT] [V] Layer: priorbox_new:4 copy Host Persistent: 0 Device Persistent: 0 Scratch Memory: 0
+[06/06/2023-01:29:40] [TRT] [V] Layer: priorbox_new:5 copy Host Persistent: 0 Device Persistent: 0 Scratch Memory: 0
+[06/06/2023-01:29:40] [TRT] [I] Total Host Persistent Memory: 64
+[06/06/2023-01:29:40] [TRT] [I] Total Device Persistent Memory: 0
+[06/06/2023-01:29:40] [TRT] [I] Total Scratch Memory: 0
+[06/06/2023-01:29:40] [TRT] [I] [MemUsageStats] Peak memory usage of TRT CPU/GPU memory allocators: CPU 0 MiB, GPU 1 MiB
+[06/06/2023-01:29:40] [TRT] [I] [BlockAssignment] Algorithm ShiftNTopDown took 0.082866ms to assign 6 blocks to 6 nodes requiring 62976 bytes.
+[06/06/2023-01:29:40] [TRT] [V] Optimized block assignment.
+[06/06/2023-01:29:40] [TRT] [V] Block size 34816
+[06/06/2023-01:29:40] [TRT] [V] Block size 19456
+[06/06/2023-01:29:40] [TRT] [V] Block size 5120
+[06/06/2023-01:29:40] [TRT] [V] Block size 2048
+[06/06/2023-01:29:40] [TRT] [V] Block size 1024
+[06/06/2023-01:29:40] [TRT] [V] Block size 512
+[06/06/2023-01:29:40] [TRT] [I] Total Activation Memory: 62976
+[06/06/2023-01:29:40] [TRT] [V] Using cublas as a tactic source
+[06/06/2023-01:29:40] [TRT] [I] [MemUsageChange] Init cuBLAS/cuBLASLt: CPU +0, GPU -17, now: CPU 827, GPU 3868 (MiB)
+[06/06/2023-01:29:40] [TRT] [V] Using cuDNN as a tactic source
+[06/06/2023-01:29:40] [TRT] [I] [MemUsageChange] Init cuDNN: CPU +0, GPU +0, now: CPU 827, GPU 3868 (MiB)
+[06/06/2023-01:29:40] [TRT] [V] Engine generation completed in 25.5505 seconds.
+[06/06/2023-01:29:40] [TRT] [V] Engine Layer Information:
+Layer(PluginV2): priorbox, Tactic: 0, input:0[Float(1,300,300,3)] -> priorbox_new:0[Float(1,2,4332,1)], priorbox_new:1[Float(1,2,2400,1)], priorbox_new:2[Float(1,2,600,1)], priorbox_new:3[Float(1,2,216,1)], priorbox_new:4[Float(1,2,96,1)], priorbox_new:5[Float(1,2,24,1)]
+Layer(Reformat): priorbox_new:0 copy, Tactic: 0, priorbox_new:0[Float(1,2,4332,1)] -> priorbox_concat_new:0[Float(1,2,4332,1)]
+Layer(Reformat): priorbox_new:1 copy, Tactic: 0, priorbox_new:1[Float(1,2,2400,1)] -> priorbox_concat_new:0[Float(1,2,2400,1)]
+Layer(Reformat): priorbox_new:2 copy, Tactic: 0, priorbox_new:2[Float(1,2,600,1)] -> priorbox_concat_new:0[Float(1,2,600,1)]
+Layer(Reformat): priorbox_new:3 copy, Tactic: 0, priorbox_new:3[Float(1,2,216,1)] -> priorbox_concat_new:0[Float(1,2,216,1)]
+Layer(Reformat): priorbox_new:4 copy, Tactic: 0, priorbox_new:4[Float(1,2,96,1)] -> priorbox_concat_new:0[Float(1,2,96,1)]
+Layer(Reformat): priorbox_new:5 copy, Tactic: 0, priorbox_new:5[Float(1,2,24,1)] -> priorbox_concat_new:0[Float(1,2,24,1)]
+[06/06/2023-01:29:40] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in building engine: CPU +0, GPU +0, now: CPU 0, GPU 0 (MiB)

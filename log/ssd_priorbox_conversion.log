@@ -1,0 +1,18 @@
+2023-06-05 21:11:45.129359: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.10.2
+WARNING:tensorflow:Deprecation warnings have been disabled. Set TF_ENABLE_DEPRECATION_WARNINGS=1 to re-enable them.
+ssd_mobilenet_v2_coco_2018_03_29.tar.gz found. Proceed.
+ssd_mobilenet_v2_coco_2018_03_29 found. Proceed.
+Traceback (most recent call last):
+  File "/home/cuterbot/.pycharm_helpers/pydev/pydevd.py", line 1496, in _exec
+    pydev_imports.execfile(file, globals, locals)  # execute the script
+  File "/home/cuterbot/.pycharm_helpers/pydev/_pydev_imps/_pydev_execfile.py", line 18, in execfile
+    exec(compile(contents+"\n", file, 'exec'), glob, loc)
+  File "/home/cuterbot/Model_Conversion/ssd_tf_onnx_trt.py", line 756, in <module>
+    path_onnx_model_new = redef_onnx_node_4_trt_plugin(path_onnx_model)   # redefine the trt plugin nodes
+  File "/home/cuterbot/Model_Conversion/ssd_tf_onnx_trt.py", line 479, in redef_onnx_node_4_trt_plugin
+    node_from_boxloc_concat = node_tmp_1[0][1].o()
+IndexError: list index out of range
+[E] No function: shape registered for opset: 15
+[E] No function: __len__ registered for opset: 15
+[E] No function: shape registered for opset: 15
+[E] No function: __len__ registered for opset: 15

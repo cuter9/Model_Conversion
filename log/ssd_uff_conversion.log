@@ -1,0 +1,197 @@
+2023-06-07 23:49:01.730207: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.10.2
+WARNING:tensorflow:Deprecation warnings have been disabled. Set TF_ENABLE_DEPRECATION_WARNINGS=1 to re-enable them.
+ssd_mobilenet_v2_coco_2018_03_29.tar.gz found. Proceed.
+ssd_mobilenet_v2_coco_2018_03_29 found. Proceed.
+---- start converting tf ssd to uff model ----
+WARNING:tensorflow:From /usr/lib/python3.6/dist-packages/graphsurgeon/StaticGraph.py:206: The name tf.summary.FileWriter is deprecated. Please use tf.compat.v1.summary.FileWriter instead.
+
+WARNING:tensorflow:Passing a `GraphDef` to the SummaryWriter is deprecated. Pass a `Graph` object instead, such as `sess.graph`.
+---- feature map size array :  [19, 10, 5, 3, 2, 1]
+WARNING:tensorflow:Passing a `GraphDef` to the SummaryWriter is deprecated. Pass a `Graph` object instead, such as `sess.graph`.
+NOTE: UFF has been tested with TensorFlow 1.15.0.
+WARNING: The version of TensorFlow installed on this system is not guaranteed to work with UFF.
+UFF Version 0.6.9
+=== Automatically deduced input nodes ===
+[name: "input"
+op: "Placeholder"
+attr {
+  key: "dtype"
+  value {
+    type: DT_FLOAT
+  }
+}
+attr {
+  key: "shape"
+  value {
+    shape {
+      dim {
+        size: 1
+      }
+      dim {
+        size: 300
+      }
+      dim {
+        size: 300
+      }
+      dim {
+        size: 3
+      }
+    }
+  }
+}
+]
+=========================================
+
+Using output node nms
+Converting to UFF graph
+Warning: No conversion function registered for layer: NMS_TRT yet.
+Converting nms as custom op: NMS_TRT
+WARNING:tensorflow:From /usr/lib/python3.6/dist-packages/uff/converters/tensorflow/converter.py:226: The name tf.AttrValue is deprecated. Please use tf.compat.v1.AttrValue instead.
+
+Warning: No conversion function registered for layer: FlattenConcat_TRT yet.
+Converting boxconf_concat as custom op: FlattenConcat_TRT
+Warning: No conversion function registered for layer: FlattenConcat_TRT yet.
+Converting boxloc_concat as custom op: FlattenConcat_TRT
+Warning: No conversion function registered for layer: GridAnchor_TRT yet.
+Converting priorbox as custom op: GridAnchor_TRT
+DEBUG [/usr/lib/python3.6/dist-packages/uff/converters/tensorflow/converter.py:143] Marking ['nms'] as outputs
+No. nodes: 585
+UFF Output written to model_rep/ssd_mobilenet_v2_coco_2018_03_29.uff
+---- start TRT engine generation from uff model ----
+[06/07/2023-23:51:46] [TRT] [I] [MemUsageChange] Init CUDA: CPU +229, GPU +0, now: CPU 572, GPU 3892 (MiB)
+[06/07/2023-23:51:46] [TRT] [I] [MemUsageSnapshot] Begin constructing builder kernel library: CPU 572 MiB, GPU 3880 MiB
+[06/07/2023-23:51:46] [TRT] [I] [MemUsageSnapshot] End constructing builder kernel library: CPU 602 MiB, GPU 3889 MiB
+[06/07/2023-23:51:50] [TRT] [I] ---------- Layers Running on DLA ----------
+[06/07/2023-23:51:50] [TRT] [I] ---------- Layers Running on GPU ----------
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] priorbox
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] priorbox copy
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] priorbox_1 copy
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] priorbox_2 copy
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] priorbox_3 copy
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] priorbox_4 copy
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] priorbox_5 copy
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/Conv/Conv2D + PWN(FeatureExtractor/MobilenetV2/Conv/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv/depthwise/depthwise + PWN(FeatureExtractor/MobilenetV2/expanded_conv/depthwise/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv/project/Conv2D
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_1/expand/Conv2D + PWN(FeatureExtractor/MobilenetV2/expanded_conv_1/expand/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_1/depthwise/depthwise + PWN(FeatureExtractor/MobilenetV2/expanded_conv_1/depthwise/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_1/project/Conv2D
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_2/expand/Conv2D + PWN(FeatureExtractor/MobilenetV2/expanded_conv_2/expand/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_2/depthwise/depthwise + PWN(FeatureExtractor/MobilenetV2/expanded_conv_2/depthwise/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_2/project/Conv2D + FeatureExtractor/MobilenetV2/expanded_conv_2/add
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_3/expand/Conv2D + PWN(FeatureExtractor/MobilenetV2/expanded_conv_3/expand/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_3/depthwise/depthwise + PWN(FeatureExtractor/MobilenetV2/expanded_conv_3/depthwise/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_3/project/Conv2D
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_4/expand/Conv2D + PWN(FeatureExtractor/MobilenetV2/expanded_conv_4/expand/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_4/depthwise/depthwise + PWN(FeatureExtractor/MobilenetV2/expanded_conv_4/depthwise/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_4/project/Conv2D + FeatureExtractor/MobilenetV2/expanded_conv_4/add
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_5/expand/Conv2D + PWN(FeatureExtractor/MobilenetV2/expanded_conv_5/expand/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_5/depthwise/depthwise + PWN(FeatureExtractor/MobilenetV2/expanded_conv_5/depthwise/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_5/project/Conv2D + FeatureExtractor/MobilenetV2/expanded_conv_5/add
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_6/expand/Conv2D + PWN(FeatureExtractor/MobilenetV2/expanded_conv_6/expand/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_6/depthwise/depthwise + PWN(FeatureExtractor/MobilenetV2/expanded_conv_6/depthwise/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_6/project/Conv2D
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_7/expand/Conv2D + PWN(FeatureExtractor/MobilenetV2/expanded_conv_7/expand/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_7/depthwise/depthwise + PWN(FeatureExtractor/MobilenetV2/expanded_conv_7/depthwise/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_7/project/Conv2D + FeatureExtractor/MobilenetV2/expanded_conv_7/add
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_8/expand/Conv2D + PWN(FeatureExtractor/MobilenetV2/expanded_conv_8/expand/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_8/depthwise/depthwise + PWN(FeatureExtractor/MobilenetV2/expanded_conv_8/depthwise/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_8/project/Conv2D + FeatureExtractor/MobilenetV2/expanded_conv_8/add
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_9/expand/Conv2D + PWN(FeatureExtractor/MobilenetV2/expanded_conv_9/expand/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_9/depthwise/depthwise + PWN(FeatureExtractor/MobilenetV2/expanded_conv_9/depthwise/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_9/project/Conv2D + FeatureExtractor/MobilenetV2/expanded_conv_9/add
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_10/expand/Conv2D + PWN(FeatureExtractor/MobilenetV2/expanded_conv_10/expand/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_10/depthwise/depthwise + PWN(FeatureExtractor/MobilenetV2/expanded_conv_10/depthwise/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_10/project/Conv2D
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_11/expand/Conv2D + PWN(FeatureExtractor/MobilenetV2/expanded_conv_11/expand/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_11/depthwise/depthwise + PWN(FeatureExtractor/MobilenetV2/expanded_conv_11/depthwise/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_11/project/Conv2D + FeatureExtractor/MobilenetV2/expanded_conv_11/add
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_12/expand/Conv2D + PWN(FeatureExtractor/MobilenetV2/expanded_conv_12/expand/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_12/depthwise/depthwise + PWN(FeatureExtractor/MobilenetV2/expanded_conv_12/depthwise/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_12/project/Conv2D + FeatureExtractor/MobilenetV2/expanded_conv_12/add
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_13/expand/Conv2D + PWN(FeatureExtractor/MobilenetV2/expanded_conv_13/expand/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] BoxPredictor_0/BoxEncodingPredictor/Conv2D || BoxPredictor_0/ClassPredictor/Conv2D
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] (Unnamed Layer* 322) [Shuffle] + BoxPredictor_0/Reshape
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_13/depthwise/depthwise + PWN(FeatureExtractor/MobilenetV2/expanded_conv_13/depthwise/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_13/project/Conv2D
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_14/expand/Conv2D + PWN(FeatureExtractor/MobilenetV2/expanded_conv_14/expand/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_14/depthwise/depthwise + PWN(FeatureExtractor/MobilenetV2/expanded_conv_14/depthwise/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_14/project/Conv2D + FeatureExtractor/MobilenetV2/expanded_conv_14/add
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_15/expand/Conv2D + PWN(FeatureExtractor/MobilenetV2/expanded_conv_15/expand/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_15/depthwise/depthwise + PWN(FeatureExtractor/MobilenetV2/expanded_conv_15/depthwise/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_15/project/Conv2D + FeatureExtractor/MobilenetV2/expanded_conv_15/add
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_16/expand/Conv2D + PWN(FeatureExtractor/MobilenetV2/expanded_conv_16/expand/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_16/depthwise/depthwise + PWN(FeatureExtractor/MobilenetV2/expanded_conv_16/depthwise/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/expanded_conv_16/project/Conv2D
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/Conv_1/Conv2D + PWN(FeatureExtractor/MobilenetV2/Conv_1/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] BoxPredictor_1/BoxEncodingPredictor/Conv2D || BoxPredictor_1/ClassPredictor/Conv2D
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] (Unnamed Layer* 423) [Shuffle] + BoxPredictor_1/Reshape
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/layer_19_1_Conv2d_2_1x1_256/Conv2D + PWN(FeatureExtractor/MobilenetV2/layer_19_1_Conv2d_2_1x1_256/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/layer_19_2_Conv2d_2_3x3_s2_512_depthwise/depthwise + PWN(FeatureExtractor/MobilenetV2/layer_19_2_Conv2d_2_3x3_s2_512_depthwise/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/layer_19_2_Conv2d_2_3x3_s2_512/Conv2D + PWN(FeatureExtractor/MobilenetV2/layer_19_2_Conv2d_2_3x3_s2_512/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] BoxPredictor_2/BoxEncodingPredictor/Conv2D || BoxPredictor_2/ClassPredictor/Conv2D
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] (Unnamed Layer* 454) [Shuffle] + BoxPredictor_2/Reshape
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/layer_19_1_Conv2d_3_1x1_128/Conv2D + PWN(FeatureExtractor/MobilenetV2/layer_19_1_Conv2d_3_1x1_128/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/layer_19_2_Conv2d_3_3x3_s2_256_depthwise/depthwise + PWN(FeatureExtractor/MobilenetV2/layer_19_2_Conv2d_3_3x3_s2_256_depthwise/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/layer_19_2_Conv2d_3_3x3_s2_256/Conv2D + PWN(FeatureExtractor/MobilenetV2/layer_19_2_Conv2d_3_3x3_s2_256/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] BoxPredictor_3/BoxEncodingPredictor/Conv2D || BoxPredictor_3/ClassPredictor/Conv2D
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] (Unnamed Layer* 485) [Shuffle] + BoxPredictor_3/Reshape
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/layer_19_1_Conv2d_4_1x1_128/Conv2D + PWN(FeatureExtractor/MobilenetV2/layer_19_1_Conv2d_4_1x1_128/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/layer_19_2_Conv2d_4_3x3_s2_256_depthwise/depthwise + PWN(FeatureExtractor/MobilenetV2/layer_19_2_Conv2d_4_3x3_s2_256_depthwise/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/layer_19_2_Conv2d_4_3x3_s2_256/Conv2D + PWN(FeatureExtractor/MobilenetV2/layer_19_2_Conv2d_4_3x3_s2_256/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] BoxPredictor_4/BoxEncodingPredictor/Conv2D || BoxPredictor_4/ClassPredictor/Conv2D
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] (Unnamed Layer* 516) [Shuffle] + BoxPredictor_4/Reshape
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/layer_19_1_Conv2d_5_1x1_64/Conv2D + PWN(FeatureExtractor/MobilenetV2/layer_19_1_Conv2d_5_1x1_64/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/layer_19_2_Conv2d_5_3x3_s2_128_depthwise/depthwise + PWN(FeatureExtractor/MobilenetV2/layer_19_2_Conv2d_5_3x3_s2_128_depthwise/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] FeatureExtractor/MobilenetV2/layer_19_2_Conv2d_5_3x3_s2_128/Conv2D + PWN(FeatureExtractor/MobilenetV2/layer_19_2_Conv2d_5_3x3_s2_128/Relu6)
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] BoxPredictor_5/BoxEncodingPredictor/Conv2D || BoxPredictor_5/ClassPredictor/Conv2D
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] (Unnamed Layer* 547) [Shuffle] + BoxPredictor_5/Reshape
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] Squeeze
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] (Unnamed Layer* 555) [Shuffle] + BoxPredictor_0/Reshape_1
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] (Unnamed Layer* 562) [Shuffle] + BoxPredictor_1/Reshape_1
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] (Unnamed Layer* 569) [Shuffle] + BoxPredictor_2/Reshape_1
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] (Unnamed Layer* 576) [Shuffle] + BoxPredictor_3/Reshape_1
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] (Unnamed Layer* 583) [Shuffle] + BoxPredictor_4/Reshape_1
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] (Unnamed Layer* 590) [Shuffle] + BoxPredictor_5/Reshape_1
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] boxconf_concat
+[06/07/2023-23:51:50] [TRT] [I] [GpuLayer] nms
+[06/07/2023-23:51:53] [TRT] [I] [MemUsageChange] Init cuBLAS/cuBLASLt: CPU +158, GPU +83, now: CPU 1037, GPU 3895 (MiB)
+[06/07/2023-23:51:57] [TRT] [I] [MemUsageChange] Init cuDNN: CPU +241, GPU -103, now: CPU 1278, GPU 3792 (MiB)
+[06/07/2023-23:51:57] [TRT] [I] Local timing cache in use. Profiling results in this builder pass will not be stored.
+[06/07/2023-23:52:36] [TRT] [W] Tactic Device request: 278MB Available: 173MB. Device memory is insufficient to use tactic.
+[06/07/2023-23:52:36] [TRT] [W] Skipping tactic 3 due to insuficient memory on requested size of 278 detected for tactic 4.
+[06/07/2023-23:52:39] [TRT] [W] Tactic Device request: 791MB Available: 349MB. Device memory is insufficient to use tactic.
+[06/07/2023-23:52:39] [TRT] [W] Skipping tactic 3 due to insuficient memory on requested size of 791 detected for tactic 4.
+[06/07/2023-23:52:39] [TRT] [W] Tactic Device request: 786MB Available: 330MB. Device memory is insufficient to use tactic.
+[06/07/2023-23:52:39] [TRT] [W] Skipping tactic 3 due to insuficient memory on requested size of 786 detected for tactic 4.
+[06/07/2023-23:52:55] [TRT] [W] Tactic Device request: 445MB Available: 393MB. Device memory is insufficient to use tactic.
+[06/07/2023-23:52:55] [TRT] [W] Skipping tactic 3 due to insuficient memory on requested size of 445 detected for tactic 4.
+[06/07/2023-23:52:56] [TRT] [W] Tactic Device request: 443MB Available: 377MB. Device memory is insufficient to use tactic.
+[06/07/2023-23:52:56] [TRT] [W] Skipping tactic 3 due to insuficient memory on requested size of 443 detected for tactic 4.
+[06/07/2023-23:53:56] [TRT] [W] Tactic Device request: 686MB Available: 620MB. Device memory is insufficient to use tactic.
+[06/07/2023-23:53:57] [TRT] [W] Skipping tactic 4 due to insuficient memory on requested size of 686 detected for tactic 5.
+[06/07/2023-23:53:57] [TRT] [I] Some tactics do not have sufficient workspace memory to run. Increasing workspace size may increase performance, please check verbose output.
+[06/07/2023-23:53:58] [TRT] [W] Tactic Device request: 685MB Available: 587MB. Device memory is insufficient to use tactic.
+[06/07/2023-23:53:58] [TRT] [W] Skipping tactic 4 due to insuficient memory on requested size of 685 detected for tactic 5.
+[06/07/2023-23:54:37] [TRT] [W] Tactic Device request: 902MB Available: 701MB. Device memory is insufficient to use tactic.
+[06/07/2023-23:54:37] [TRT] [W] Skipping tactic 3 due to insuficient memory on requested size of 902 detected for tactic 4.
+[06/07/2023-23:54:37] [TRT] [W] Tactic Device request: 902MB Available: 683MB. Device memory is insufficient to use tactic.
+[06/07/2023-23:54:37] [TRT] [W] Skipping tactic 3 due to insuficient memory on requested size of 902 detected for tactic 4.
+[06/07/2023-23:55:37] [TRT] [I] Detected 1 inputs and 2 output network tensors.
+[06/07/2023-23:55:38] [TRT] [I] Total Host Persistent Memory: 127696
+[06/07/2023-23:55:38] [TRT] [I] Total Device Persistent Memory: 22663168
+[06/07/2023-23:55:38] [TRT] [I] Total Scratch Memory: 3578624
+[06/07/2023-23:55:38] [TRT] [I] [MemUsageStats] Peak memory usage of TRT CPU/GPU memory allocators: CPU 96 MiB, GPU 729 MiB
+[06/07/2023-23:55:38] [TRT] [I] [BlockAssignment] Algorithm ShiftNTopDown took 87.5605ms to assign 14 blocks to 120 nodes requiring 13095936 bytes.
+[06/07/2023-23:55:38] [TRT] [I] Total Activation Memory: 13095936
+[06/07/2023-23:55:38] [TRT] [I] [MemUsageChange] Init cuBLAS/cuBLASLt: CPU +0, GPU +41, now: CPU 1558, GPU 3464 (MiB)
+[06/07/2023-23:55:38] [TRT] [I] [MemUsageChange] Init cuDNN: CPU +0, GPU +11, now: CPU 1558, GPU 3475 (MiB)
+[06/07/2023-23:55:38] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in building engine: CPU +33, GPU +64, now: CPU 33, GPU 64 (MiB)
+^CTraceback (most recent call last):
+  File "/home/cuterbot/.pycharm_helpers/pydev/pydevd.py", line 2195, in <module>
+    main()
+  File "/home/cuterbot/.pycharm_helpers/pydev/pydevd.py", line 2183, in main
+    debugger.wait_for_commands(globals)
+  File "/home/cuterbot/.pycharm_helpers/pydev/pydevd.py", line 1551, in wait_for_commands
+    time.sleep(0.01)
+KeyboardInterrupt
