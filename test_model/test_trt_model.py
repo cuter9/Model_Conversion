@@ -13,6 +13,7 @@ from utils.visualization import BBoxVisualization
 
 # test SSD model with cuda through pycuda.driver
 WORK = os.getcwd()
+
 DATA_REPO_DIR = os.path.join("../../", "Data_Repo/Model_Conversion/SSD_mobilenet")
 TEST_DIR = os.path.join(DATA_REPO_DIR, "Test Data")
 os.makedirs(TEST_DIR, exist_ok=True)

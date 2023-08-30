@@ -16,24 +16,24 @@
           </mappings>
         </serverdata>
       </paths>
-      <paths name="cuterbot@192.168.1.105:22 password">
-        <serverdata>
-          <mappings>
-            <mapping deploy="/home/cuterbot/Model_Conversion" local="$PROJECT_DIR$" />
-          </mappings>
-        </serverdata>
-      </paths>
       <paths name="cuterbot@192.168.1.106:22 password">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/cuterbot/Model_Conversion" local="$PROJECT_DIR$" />
+            <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
-      <paths name="cuterbot@192.168.1.113:22 password">
+      <paths name="cuterbot@192.168.1.108:22 password">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/cuterbot/Model_Conversion" local="$PROJECT_DIR$" />
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="cuterbot@192.168.1.108:22 password (2)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
