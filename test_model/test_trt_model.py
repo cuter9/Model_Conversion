@@ -38,7 +38,7 @@ def verify_trt_model(path_model, model_type):
     # img_data = np.array(img.getdata()).reshape(img.size[1], img.size[0], 3)
     # img_data = np.expand_dims(img_data.astype(np.uint8), axis=0)
     # print(img_data.shape)
-    img_handle = cv2.imread("000000088462.jpg")
+    img_handle = cv2.imread(test_img)
 
     cls_dict = get_cls_dict("coco")
     trt_ssd = TrtSSD(path_model, INPUT_HW)
