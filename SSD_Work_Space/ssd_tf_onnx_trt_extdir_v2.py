@@ -8,17 +8,19 @@ import onnx
 import onnx_graphsurgeon as gs_onnx
 
 from tf_onnx import convtf2onnx, load_customer_op
-from Utils.ssd_utils import load_config, tf_saved2frozen, get_feature_map_shape, download_model
+from Utils.ssd_utils_v2 import load_config, tf_saved2frozen, get_feature_map_shape, download_model
 
 faulthandler.enable()
 
 TRT_INPUT_NAME = 'input'
 TRT_OUTPUT_NAME = 'nms'
-FROZEN_GRAPH_NAME = 'frozen_inference_graph.pb'
+# FROZEN_GRAPH_NAME = 'frozen_inference_graph.pb'   # for TF v1
+FROZEN_GRAPH_NAME = 'saved_model.pb'        # for TF v2
 
 # MODEL_NAME = "ssd_mobilenet_v1_coco_2018_01_28"
-MODEL_NAME = "ssd_mobilenet_v2_coco_2018_03_29"
-MODEL_TRT = "ssd_mobilenet_v2_coco"
+# MODEL_NAME = "ssd_mobilenet_v2_coco_2018_03_29"     # tf v1 model
+MODEL_NAME = "ssd_mobilenet_v2_320x320_coco17_tpu-8"
+MODEL_TRT = "ssd_mobilenet_v2_coco_tf_v2"
 
 WORK = os.getcwd()
 
@@ -37,7 +39,7 @@ TMP_PB_GRAPH_NAME = MODEL_NAME + "_4_onnx_conv.pb"
 TF_MODEL_DIR = os.path.join(DATA_REPO_DIR, "TF_Model")
 os.makedirs(TF_MODEL_DIR, exist_ok=True)
 
-TMP_MODEL = os.path.join(TF_MODEL_DIR, "Exported_Model")
+TMP_MODEL = os.path.join(TF_MODEL_DIR, "Exported_Model", "saved_model")     # for TF v2
 os.makedirs(TMP_MODEL, exist_ok=True)
 
 TF_CUSTOM_OP = "tensorflow_trt_op/python3/ops/set"  # the path stores the trt custom op for tf parsing
@@ -78,10 +80,17 @@ def ssd_pipeline_to_onnx(checkpoint_path, config_path,
         subprocess.call(['rm', '-r', tmp_tbdir_d])
     subprocess.call(['mkdir', '-p', tmp_tbdir_d])
 
-    static_graph = gs.StaticGraph(frozen_graph_path)
-    static_graph.write_tensorboard(tmp_tbdir_s)
+    _static_graph = tf.saved_model.load(tmp_dir)
+    g = _static_graph.signatures["serving_default"].graph   # creat tf Graph objetcs
+    static_graph = gs.StaticGraph(g)
+    # static_graph = gs.StaticGraph(frozen_graph_path)
+    # static_graph.write_tensorboard(tmp_tbdir_s)       # TensorRT use TF v1 to write graph which can not be used in TF v2
+    # https://www.tensorflow.org/versions/r2.9/api_docs/python/tf/summary/graph
+    writer = tf.summary.create_file_writer(tmp_tbdir_s)
+    with writer.as_default():
+        tf.summary.graph(g)
 
-    dynamic_graph = gs.DynamicGraph(frozen_graph_path)
+    dynamic_graph = gs.DynamicGraph(g)
 
     # forward all identity nodes
     all_identity_nodes = dynamic_graph.find_nodes_by_op("Identity")
@@ -610,7 +619,8 @@ def ssd_onnx_to_engine(path_onnx_model,
 
 if __name__ == '__main__':
     download_model(MODEL_NAME, TF_MODEL_DIR)
-    checkpoint_path = os.path.join(TF_MODEL_DIR, MODEL_NAME, "model.ckpt")
+    # checkpoint_path = os.path.join(TF_MODEL_DIR, MODEL_NAME, "model.ckpt")    # the ckpt path of TF v1
+    checkpoint_path = os.path.join(TF_MODEL_DIR, MODEL_NAME, "checkpoint")      # the ckpt director of TF v2, refer to tf.train.checkpoint_management.py
     config_path = os.path.join(TF_MODEL_DIR, MODEL_NAME, "pipeline.config")
     output_engine = os.path.join(MODEL_REPO_DIR, MODEL_TRT + ".engine")
 

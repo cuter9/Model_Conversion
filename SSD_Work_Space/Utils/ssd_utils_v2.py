@@ -5,7 +5,8 @@ import subprocess
 
 
 def download_model(model_name, model_dir):
-    import six.moves.urllib as urllib
+    # import six.moves.urllib as urllib
+    import wget
     import tarfile
     """
     Download Model form TF's Model Zoo
@@ -15,14 +16,19 @@ def download_model(model_name, model_dir):
     #           https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf1_detection_zoo.md
     # Ref. 2 :  TensorFlow 2 Object Detection API tutorial
     #           https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/install.html#downloading-the-tensorflow-model-garden
-    download_base = 'http://download.tensorflow.org/models/object_detection/'
+#    download_base = 'http://download.tensorflow.org/models/object_detection/'      # base of tf v1 models
+    download_base = 'http://download.tensorflow.org/models/object_detection/tf2/20200711/'
+    # ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8.tar.gz
+    # ssd_mobilenet_v2_320x320_coco17_tpu-8.tar.gz
     model_file_path = os.path.join(model_dir, model_file)
     model_dir_path = os.path.join(model_dir, model_name)
 
     if not os.path.isfile(model_file_path):
         print('{} not found. Downloading it now.'.format(model_file))
-        opener = urllib.request.URLopener()
-        opener.retrieve(download_base + model_file, model_file_path)
+        # opener = urllib.request.URLopener()
+        # opener.retrieve(download_base + model_file, model_file_path)
+        url = download_base + model_file
+        model_file_path = wget.download(url)
     else:
         print('{} found. Proceed.'.format(model_file))
     if not os.path.isdir(model_dir_path):
@@ -55,6 +61,7 @@ def get_feature_map_shape(config):
 
 def load_config(config_path):
     from object_detection.protos.pipeline_pb2 import TrainEvalPipelineConfig
+    # from object_detection.protos.pipeline_pb2 import TrainAndEvalPipelineConfig
     from google.protobuf.text_format import Merge
     config = TrainEvalPipelineConfig()
 
@@ -75,7 +82,8 @@ def tf_saved2frozen(config, checkpoint_path, dir_frozen_graph):
     # config : config in model dir, load in advance with _load_config()
     # checkpoint_path : checkpoint file of th model
     # dir_frozen_graph : directory to store the model exported from the tensorflow model
-    from object_detection import exporter
+#    from object_detection import exporter      # the contrib was remove since tf v2
+    from object_detection import exporter_lib_v2 as exporter    # use exporter_lib_v2
     import tensorflow as tf
 
     # tf_config = tf.ConfigProto()
@@ -94,13 +102,14 @@ def tf_saved2frozen(config, checkpoint_path, dir_frozen_graph):
     # https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/training.html
     # https://blog.csdn.net/yukinorong/article/details/103242940?spm=1001.2101.3001.6661.1&utm_medium=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-103242940-blog-77033659.235%5Ev32%5Epc_relevant_default_base3&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-103242940-blog-77033659.235%5Ev32%5Epc_relevant_default_base3&utm_relevant_index=1
     # with tf.Session(config=tf_config) as tf_sess:
-    with tf.compat.v1.Session(config=tf_config) as tf_sess:
-        with tf.Graph().as_default() as tf_graph:
-            exporter.export_inference_graph(
-                'image_tensor',  # the input type of the model to be exported
-                config,  # pipelined config file of the downloaded train model to be exported
-                checkpoint_path,  # the checkpoint of the download trained model to be exported
-                dir_frozen_graph,  # the directory to store the exported model from the downloaded trained model
-                input_shape=[1, None, None, 3])
+    # with tf.compat.v1.Session(config=tf_config) as tf_sess:
+    #    with tf.Graph().as_default() as tf_graph:
+    exporter.export_inference_graph(
+        'image_tensor',  # the input type of the model to be exported
+        config,  # pipelined config file of the downloaded train model to be exported
+        checkpoint_path,  # the checkpoint of the download trained model to be exported
+        dir_frozen_graph)  # the directory to store the exported model from the downloaded trained model
+        # use_side_inputs=True,
+        # side_input_shapes=[1/None/None/3])
     return
 
