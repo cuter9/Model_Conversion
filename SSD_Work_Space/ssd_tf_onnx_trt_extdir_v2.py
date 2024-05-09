@@ -57,7 +57,7 @@ def ssd_pipeline_to_onnx(checkpoint_path, config_path,
     import tensorflow as tf
 
     print('---- start converting tf ssd to onnx model ----')
-    print('---- start graphsurgeon tf ssd to for onnx model conversion----')
+    print('---- start graphsurgeon tf ssd for onnx model conversion----')
 
     config = load_config(config_path)
     frozen_graph_path = os.path.join(tmp_dir, FROZEN_GRAPH_NAME)
@@ -81,7 +81,7 @@ def ssd_pipeline_to_onnx(checkpoint_path, config_path,
     subprocess.call(['mkdir', '-p', tmp_tbdir_d])
 
     _static_graph = tf.saved_model.load(tmp_dir)
-    g = _static_graph.signatures["serving_default"].graph   # creat tf Graph objetcs
+    g = _static_graph.signatures["serving_default"].graph   # creat tf Graph objects
     static_graph = gs.StaticGraph(g)
     # static_graph = gs.StaticGraph(frozen_graph_path)
     # static_graph.write_tensorboard(tmp_tbdir_s)       # TensorRT use TF v1 to write graph which can not be used in TF v2
