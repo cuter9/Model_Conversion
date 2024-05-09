@@ -86,8 +86,8 @@ def ssd_pipeline_to_onnx(checkpoint_path, config_path,
     # static_graph = gs.StaticGraph(frozen_graph_path)
     # static_graph.write_tensorboard(tmp_tbdir_s)       # TensorRT use TF v1 to write graph which can not be used in TF v2
     # https://www.tensorflow.org/versions/r2.9/api_docs/python/tf/summary/graph
-    writer = tf.summary.create_file_writer(tmp_tbdir_s)
-    with writer.as_default():
+    writer_s = tf.summary.create_file_writer(tmp_tbdir_s)
+    with writer_s.as_default():
         tf.summary.graph(g)
 
     dynamic_graph = gs.DynamicGraph(g)
@@ -210,8 +210,11 @@ def ssd_pipeline_to_onnx(checkpoint_path, config_path,
 
     print('---- the graphsurgeon tf ssd completed ----', '\n',
           '---- store the surged tf model to ', path_graph_pb, 'for onnx conversion ---- \n')
-    dynamic_graph.write_tensorboard(tmp_tbdir_d)
-    dynamic_graph.write(path_graph_pb)  # store the surged tf model
+    # dynamic_graph.write_tensorboard(tmp_tbdir_d)
+    # dynamic_graph.write(path_graph_pb)  # store the surged tf model
+    writer_d = tf.summary.create_file_writer(tmp_tbdir_d)
+    with writer_d.as_default():
+        tf.summary.graph(dynamic_graph.as_graph_def())
 
     print('---- start onnx conversion with surged tf model ----')
 
