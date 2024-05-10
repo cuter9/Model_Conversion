@@ -92,6 +92,10 @@ def ssd_pipeline_to_onnx(checkpoint_path, config_path,
 
     dynamic_graph = gs.DynamicGraph(g)
 
+    spc = dynamic_graph.find_nodes_by_op('StatefulPartitionedCall')
+    fspc = spc.f
+    fspc.name = "StatefulPartitionedCall"
+
     # forward all identity nodes
     all_identity_nodes = dynamic_graph.find_nodes_by_op("Identity")
     dynamic_graph.forward_inputs(all_identity_nodes)
