@@ -55,6 +55,7 @@ def ssd_pipeline_to_onnx(checkpoint_path, config_path,
                          path_graph_pb, path_onnx_model, path_onnx_model_1, tmp_dir=TMP_MODEL):
     import graphsurgeon as gs
     import tensorflow as tf
+    from tensorflow.python.framework import function_def_to_graph as f2g
 
     print('---- start converting tf ssd to onnx model ----')
     print('---- start graphsurgeon tf ssd for onnx model conversion----')
@@ -80,21 +81,65 @@ def ssd_pipeline_to_onnx(checkpoint_path, config_path,
         subprocess.call(['rm', '-r', tmp_tbdir_d])
     subprocess.call(['mkdir', '-p', tmp_tbdir_d])
 
-    _static_graph = tf.saved_model.load(tmp_dir)
-    g = _static_graph.signatures["serving_default"].graph   # creat tf Graph objects
-    static_graph = gs.StaticGraph(g)
+    saved_model = tf.saved_model.load(tmp_dir)
+    g_serving = saved_model.signatures["serving_default"]   # creat tf Graph objects
+    g = g_serving.graph
+    g_def = g.as_graph_def()
+    g_def_lib_func =g_def.library.function
+    static_graph = gs.StaticGraph(g_def)
+    # static_graph.lib_func = g_def_lib_func
     # static_graph = gs.StaticGraph(frozen_graph_path)
     # static_graph.write_tensorboard(tmp_tbdir_s)       # TensorRT use TF v1 to write graph which can not be used in TF v2
     # https://www.tensorflow.org/versions/r2.9/api_docs/python/tf/summary/graph
+    # writer_s = tf.summary.create_file_writer(tmp_tbdir_s)
+    # with writer_s.as_default():
+    #    tf.summary.graph(g_def)
+
+    dynamic_graph = gs.DynamicGraph(g_def)
+
+    # Convert a FunctionDef used in the TF v2 ssd model to a GraphDefTF
+    # https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/framework/function_def_to_graph.py
+    spc = dynamic_graph.find_nodes_by_op('StatefulPartitionedCall')
+    spc_func_name = spc[0].attr['f'].func.name
+    func_spc = [f for f in dynamic_graph._internal_graphdef.library.function if f.signature.name == spc_func_name][0]   # []
+    graph_def_spc = f2g.function_def_to_graph_def(func_spc)[0]      # [0] : GraphDef; [1] : list of nodes
+
+    # find the nodes corresponding to resource variables
+    v_rsc_name = [v.name.split("/") for v in g.variables]
+    nd_v = []
+    for vn in v_rsc_name:
+        nd_v.append([n for n in graph_def_spc.node if vn[-2] in n.name.split('/') and n.op != 'ReadVariableOp'])
+
+    dynamic_graph_spc = gs.DynamicGraph(graph_def_spc)
+
     writer_s = tf.summary.create_file_writer(tmp_tbdir_s)
     with writer_s.as_default():
-        tf.summary.graph(g)
+        tf.summary.graph(graph_def_spc)
 
-    dynamic_graph = gs.DynamicGraph(g)
+    all_noop_nodes = dynamic_graph_spc.find_nodes_by_op("NoOp")
+    all_resources_nodes = dynamic_graph_spc.find_nodes_by_op("ReadVariableOp")
+    name_nd_rsc = [n.name for n in all_resources_nodes]
+    n_idx = 0
+    map_input = []
+    for nk, nd in dynamic_graph_spc.node_map.items():
+        input_name  = [(idx, nd_in) for idx, nd_in in enumerate(nd.input) if nd_in.split(":")[0] in name_nd_rsc]
+        if input_name:
+            _map_input = []
+            for in_n in input_name:
+                nd.input[in_n[0]] = [rnd.input[0] for rnd in all_resources_nodes if rnd.name == in_n[1].split(":")[:-1][0]][0]
+                _map_input.append([in_n[1], nd.input[in_n[0]]])
+            print(n_idx, _map_input)
+            map_input.append(_map_input)
+        else:
+            print(n_idx, [])
+        n_idx += 1
 
-    spc = dynamic_graph.find_nodes_by_op('StatefulPartitionedCall')
-    fspc = spc.f
-    fspc.name = "StatefulPartitionedCall"
+    # dynamic_graph_spc.forward_inputs(all_resources_nodes)
+    dynamic_graph_spc.remove(all_resources_nodes, remove_exclusive_dependencies=False)
+
+    writer_d = tf.summary.create_file_writer(tmp_tbdir_d)
+    with writer_d.as_default():
+        tf.summary.graph(dynamic_graph_spc.as_graph_def())
 
     # forward all identity nodes
     all_identity_nodes = dynamic_graph.find_nodes_by_op("Identity")
