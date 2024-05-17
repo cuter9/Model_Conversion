@@ -61,7 +61,7 @@ def tf_graphsurgeon(config, input_name=None, output_name=None,
     all_noop_nodes = dynamic_graph_spc.find_nodes_by_op("NoOp")
     all_resources_nodes = dynamic_graph_spc.find_nodes_by_op("ReadVariableOp")
     name_nd_rsc = [n.name for n in all_resources_nodes]
-    n_idx = 0
+    # n_idx = 0
     map_input = []
     for nk, nd in dynamic_graph_spc.node_map.items():
         input_name = [(idx, nd_in) for idx, nd_in in enumerate(nd.input) if nd_in.split(":")[0] in name_nd_rsc]
@@ -71,11 +71,11 @@ def tf_graphsurgeon(config, input_name=None, output_name=None,
                 nd.input[in_n[0]] = [rnd.input[0] for rnd in all_resources_nodes if rnd.name == in_n[1].split(":")[:-1][0]][
                     0]
                 _map_input.append([in_n[1], nd.input[in_n[0]]])
-            print(n_idx, _map_input)
+            # print(n_idx, _map_input)
             map_input.append(_map_input)
-        else:
-            print(n_idx, [])
-        n_idx += 1
+        # else:
+        # print(n_idx, [])
+        # n_idx += 1
 
     # dynamic_graph_spc.forward_inputs(all_resources_nodes)
     dynamic_graph_spc.remove(all_resources_nodes, remove_exclusive_dependencies=False)
@@ -218,4 +218,5 @@ def tf_graphsurgeon(config, input_name=None, output_name=None,
     # ##load custom ops need for conversion from tf model to onnx model when parsing with tf backend
     # the custom ops can be constructed by the makefile in dir /tensorflow_trt_op
     load_customer_op(path_tf_custom_op)
+
     return input_name, output_name
