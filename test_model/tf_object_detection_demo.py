@@ -15,6 +15,8 @@ from object_detection.utils import visualization_utils as viz_utils
 from object_detection.builders import model_builder
 import os
 from SSD_Work_Space.Utils.ssd_utils_v2 import download_model
+# from utils.visualization import BBoxVisualization
+# from utils.ssd_classes import get_cls_dict
 
 def load_image_into_numpy_array(path):
     """Load an image from file into a numpy array.
@@ -51,44 +53,30 @@ def get_keypoint_tuples(eval_config):
         tuple_list.append((edge.start, edge.end))
     return tuple_list
 
-
-# @title Choose the model to use, then evaluate the cell.
-MODELS = {'ssd': 'sd_mobilenet_v2_320x320_coco17_tpu-8'}
-
-model_display_name = 'ssd'  # @param ['centernet_with_keypoints', 'centernet_without_keypoints']
-model_name = MODELS[model_display_name]
-
 # Download the checkpoint and put it into models/research/object_detection/test_data/
+# @title Choose the model to use, then evaluate the cell.
+MODELS = {'ssd_mobilenet_2': 'ssd_mobilenet_v2_320x320_coco17_tpu-8',
+          'ssd_mobilenet_1': 'ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8',
+          'ssd_resnet_50': 'ssd_resnet50_v1_fpn_1024x1024_coco17_tpu-8',
+          'centernet_without_keypoints': 'centernet_hg104_512x512_coco17_tpu-8'}
+
+model_display_name = 'ssd_mobilenet_2'  # @param
+model_name = MODELS[model_display_name]
+DATA_REPO_DIR = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion/test_tf_model")
+
+'''
+MODELS = {'centernet_with_keypoints': 'centernet_hg104_512x512_kpts_coco17_tpu-32', 'centernet_without_keypoints': 'centernet_hg104_512x512_coco17_tpu-8'}
+model_display_name = 'centernet_without_keypoints' # @param ['centernet_with_keypoints', 'centernet_without_keypoints']
+model_name = MODELS[model_display_name]
+DATA_REPO_DIR = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion/centernet")
+'''
+
 DIR_TF_OBJECT_DETECTION = "/home/cuterbot/Documents/TensorFlow/models/research/object_detection/"
-DATA_REPO_DIR = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion/test_SSD")
+
 TF_MODEL_DIR = os.path.join(DATA_REPO_DIR, "TF_Model")
 download_model(model_name, TF_MODEL_DIR)
 
-'''
-if model_display_name == 'centernet_with_keypoints':
-    !wget
-    http: // download.tensorflow.org / models / object_detection / tf2 / 20200711 / centernet_hg104_512x512_kpts_coco17_tpu - 32.
-    tar.gz
-    !tar - xf
-    centernet_hg104_512x512_kpts_coco17_tpu - 32.
-    tar.gz
-    !mv
-    centernet_hg104_512x512_kpts_coco17_tpu - 32 / checkpoint
-    models / research / object_detection / test_data /
-else:
-    !wget
-    http: // download.tensorflow.org / models / object_detection / tf2 / 20200711 / centernet_hg104_512x512_coco17_tpu - 8.
-    tar.gz
-    !tar - xf
-    centernet_hg104_512x512_coco17_tpu - 8.
-    tar.gz
-    !mv
-    centernet_hg104_512x512_coco17_tpu - 8 / checkpoint
-    models / research / object_detection / test_data /
-'''
-
-#  = os.path.join('models/research/object_detection/configs/tf2/',
-#                                model_name + '.config')
+# pipeline_config = os.path.join('models/research/object_detection/configs/tf2/', model_name + '.config')
 # pipeline_config = os.path.join(DIR_TF_OBJECT_DETECTION, 'configs/tf2/', model_name + '.config')
 # pipeline_config = os.path.join(DIR_TF_OBJECT_DETECTION, 'configs/tf2/', 'centernet_hourglass104_512x512_coco17_tpu-8.config')
 # pipeline_config = os.path.join(DIR_TF_OBJECT_DETECTION, 'configs/tf2/', 'centernet_hourglass104_512x512_kpts_coco17_tpu-32.config')
@@ -109,7 +97,7 @@ ckpt.restore(os.path.join(model_dir, 'ckpt-0')).expect_partial()
 def get_model_detection_function(model):
   """Get a tf.function for detection."""
 
-  @tf.function
+  # @tf.function
   def detect_fn(image):
     """Detect objects in image."""
 
@@ -123,6 +111,7 @@ def get_model_detection_function(model):
 
 detect_fn = get_model_detection_function(detection_model)
 
+configs['eval_input_config'].label_map_path = "/home/cuterbot/Documents/TensorFlow/models/research/object_detection/data/mscoco_label_map.pbtxt"
 label_map_path = configs['eval_input_config'].label_map_path
 label_map = label_map_util.load_labelmap(label_map_path)
 categories = label_map_util.convert_label_map_to_categories(
@@ -154,10 +143,10 @@ def main():
     image_np_with_detections = image_np.copy()
 
     # Use keypoints if available in detections
-    keypoints, keypoint_scores = None, None
-    if 'detection_keypoints' in detections:
-        keypoints = detections['detection_keypoints'][0].numpy()
-        keypoint_scores = detections['detection_keypoint_scores'][0].numpy()
+    # keypoints, keypoint_scores = None, None
+    # if 'detection_keypoints' in detections:
+    #    keypoints = detections['detection_keypoints'][0].numpy()
+    #    keypoint_scores = detections['detection_keypoint_scores'][0].numpy()
 
     viz_utils.visualize_boxes_and_labels_on_image_array(
         image_np_with_detections,
@@ -167,12 +156,13 @@ def main():
         category_index,
         use_normalized_coordinates=True,
         max_boxes_to_draw=200,
-        min_score_thresh=.30,
-        agnostic_mode=False,
-        keypoints=keypoints,
-        keypoint_scores=keypoint_scores,
-        keypoint_edges=get_keypoint_tuples(configs['eval_config']))
+        min_score_thresh=.50)
+        # agnostic_mode=False,
+        # keypoints=keypoints,
+        # keypoint_scores=keypoint_scores,
+        # keypoint_edges=get_keypoint_tuples(configs['eval_config']))
 
+    matplotlib.use('TkAgg')
     plt.figure(figsize=(12, 16))
     plt.imshow(image_np_with_detections)
     plt.show()
