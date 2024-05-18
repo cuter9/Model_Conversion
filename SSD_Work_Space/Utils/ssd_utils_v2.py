@@ -28,7 +28,7 @@ def download_model(model_name, model_dir):
         # opener = urllib.request.URLopener()
         # opener.retrieve(download_base + model_file, model_file_path)
         url = download_base + model_file
-        model_file_path = wget.download(url)
+        wget.download(url, model_file_path)
         # print(url)
     else:
         print('{} found. Proceed.'.format(model_file))

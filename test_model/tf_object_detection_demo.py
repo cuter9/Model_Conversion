@@ -122,9 +122,13 @@ category_index = label_map_util.create_category_index(categories)
 label_map_dict = label_map_util.get_label_map_dict(label_map, use_display_name=True)
 
 def main():
+    import wget
     # image_dir = 'models/research/object_detection/test_images/'
-    image_dir = os.path.join(DIR_TF_OBJECT_DETECTION, 'test_images')
-    image_path = os.path.join(image_dir, 'image2.jpg')
+    # image_dir = os.path.join(DIR_TF_OBJECT_DETECTION, 'test_images')
+    # image_path = os.path.join(image_dir, 'image2.jpg')
+    image_path = "/home/cuterbot/temp/000000088462.jpg"
+    if not os.path.exists(image_path):
+        wget.download("http://images.cocodataset.org/val2017/000000088462.jpg", out=image_path)
     image_np = load_image_into_numpy_array(image_path)
 
     # Things to try:
@@ -156,8 +160,8 @@ def main():
         category_index,
         use_normalized_coordinates=True,
         max_boxes_to_draw=200,
-        min_score_thresh=.50)
-        # agnostic_mode=False,
+        min_score_thresh=.50,
+        agnostic_mode=False)
         # keypoints=keypoints,
         # keypoint_scores=keypoint_scores,
         # keypoint_edges=get_keypoint_tuples(configs['eval_config']))
