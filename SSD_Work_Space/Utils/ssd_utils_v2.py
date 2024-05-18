@@ -23,16 +23,14 @@ def download_model(model_name, model_dir):
     model_file_path = os.path.join(model_dir, model_file)
     model_dir_path = os.path.join(model_dir, model_name)
 
-    if not os.path.isfile(model_file_path):
-        print('{} not found. Downloading it now.'.format(model_file))
-        # opener = urllib.request.URLopener()
-        # opener.retrieve(download_base + model_file, model_file_path)
-        url = download_base + model_file
-        wget.download(url, model_file_path)
-        # print(url)
-    else:
-        print('{} found. Proceed.'.format(model_file))
     if not os.path.isdir(model_dir_path):
+        if not os.path.isfile(model_file_path):
+            print('{} not found. Downloading it now.'.format(model_file))
+            # opener = urllib.request.URLopener()
+            # opener.retrieve(download_base + model_file, model_file_path)
+            url = download_base + model_file
+            wget.download(url, model_file_path)
+            # print(url)
         print('{} not found. Extract it now.'.format(model_dir_path))
         tar_file = tarfile.open(model_file_path)
         tar_file.extractall(path=model_dir)
