@@ -7,6 +7,8 @@ class _WrapperFunction(function.ConcreteFunction):
                                                     cancellation_manager)
 * 2. function.ConcreteFunction
 ref. https://github.com/tensorflow/tensorflow/blob/216fce0329f8d92c11d1cf6ca67712f39432ddc6/tensorflow/python/eager/function.py#L1488
+class ConcreteFunction(object):
+  """Callable object encapsulating a function definition and its gradient.
 	def __call__(self, *args, **kwargs):  # for Executing the wrapped function.
       		return self._call_impl(args, kwargs)
   	def _call_impl(self, args, kwargs):
