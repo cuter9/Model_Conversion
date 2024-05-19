@@ -1,6 +1,7 @@
 * The calling process of TF concrete function
 * 1. TF Wrap fucntion
 ref. https://github.com/tensorflow/tensorflow/blob/216fce0329f8d92c11d1cf6ca67712f39432ddc6/tensorflow/python/saved_model/load.py
+
 class _WrapperFunction(function.ConcreteFunction):
 	def _call_flat(self, args, captured_inputs, cancellation_manager=None):
     					return super(_WrapperFunction, self)._call_flat(args, captured_inputs,
