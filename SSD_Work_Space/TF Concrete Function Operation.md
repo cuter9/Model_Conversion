@@ -1,12 +1,12 @@
 * The calling process of TF concrete function
 * 1. TF Wrap fucntion
 ref. https://github.com/tensorflow/tensorflow/blob/216fce0329f8d92c11d1cf6ca67712f39432ddc6/tensorflow/python/saved_model/load.py
-2. class _WrapperFunction(function.ConcreteFunction):
+class _WrapperFunction(function.ConcreteFunction):
 ....
  def _call_flat(self, args, captured_inputs, cancellation_manager=None):
     return super(_WrapperFunction, self)._call_flat(args, captured_inputs,
                                                     cancellation_manager)
-* function.ConcreteFunction
+* 2. function.ConcreteFunction
 ref. https://github.com/tensorflow/tensorflow/blob/216fce0329f8d92c11d1cf6ca67712f39432ddc6/tensorflow/python/eager/function.py#L1488
   def __call__(self, *args, **kwargs):  # for Executing the wrapped function.
       return self._call_impl(args, kwargs)
