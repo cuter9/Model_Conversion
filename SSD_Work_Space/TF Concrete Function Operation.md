@@ -7,7 +7,7 @@ ref. https://github.com/tensorflow/tensorflow/blob/216fce0329f8d92c11d1cf6ca6771
     return super(_WrapperFunction, self)._call_flat(args, captured_inputs,
                                                     cancellation_manager)
 * function.ConcreteFunction
-ref. https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/eager/polymorphic_function/concrete_function.py#L1018
+ref. https://github.com/tensorflow/tensorflow/blob/216fce0329f8d92c11d1cf6ca67712f39432ddc6/tensorflow/python/eager/function.py#L1488
   def __call__(self, *args, **kwargs):  # for Executing the wrapped function.
       return self._call_impl(args, kwargs)
   def _call_impl(self, args, kwargs):
