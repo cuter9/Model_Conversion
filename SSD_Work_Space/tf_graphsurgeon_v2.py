@@ -39,12 +39,19 @@ def tf_graphsurgeon(config, input_name=None, output_name=None,
 
     dynamic_graph = gs.DynamicGraph(g_def)
 
+    g_cap_map_list = list(g.captures)
+    g_cap_shape = [b[0]._handle_data.shape_and_type[0].shape for b in g_cap_map_list]
+    var_shape = [v.handle._handle_data.shape_and_type[0].shape for v in g.variables]
+    assert g_cap_shape == var_shape, 'capture in not the same as variables'
     # Convert a FunctionDef used in the TF v2 ssd model to a GraphDefTF
     # https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/framework/function_def_to_graph.py
+    # https://blog.tensorflow.org/2021/03/a-tour-of-savedmodel-signatures.html
+    # https://github.com/tensorflow/tensorflow/blob/255a314badfe538f7ddaa6345ef774755973143d/tensorflow/python/saved_model/load.py#L332
     spc = dynamic_graph.find_nodes_by_op('StatefulPartitionedCall')
     spc_func_name = spc[0].attr['f'].func.name
-    func_spc = [f for f in dynamic_graph._internal_graphdef.library.function if f.signature.name == spc_func_name][0]  # []
-    graph_def_spc = f2g.function_def_to_graph_def(func_spc)[0]  # [0] : GraphDef; [1] : list of nodes
+    f_def_spc_d_graph = [f for f in dynamic_graph._internal_graphdef.library.function if f.signature.name == spc_func_name][0]  # []
+    f_def_spc_g_ddf = [f for f in g_def.library.function if f.signature.name == spc_func_name][0]
+    graph_def_spc = f2g.function_def_to_graph_def(f_def_spc_d_graph)[0]  # [0] : GraphDef; [1] : list of nodes
 
     # find the nodes corresponding to resource variables
     v_rsc_name = [v.name.split("/") for v in g.variables]
