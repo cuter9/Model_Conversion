@@ -59,15 +59,16 @@ def ssd_pipeline_to_onnx(checkpoint_path, config_path,
     print('---- start converting tf ssd to onnx model ----')
     print('---- start graphsurgeon tf ssd for onnx model conversion----')
 
-    config = load_config(config_path)
+    # config = load_config(config_path)
     frozen_graph_path = os.path.join(tmp_dir, FROZEN_GRAPH_NAME)
-    if not os.path.exists(frozen_graph_path):  # check frozen_graph_path is existed
-        tf_saved2frozen(config, checkpoint_path,
-                        tmp_dir)  # export saved model to frozen graph, tmp_dir : frozen graph path
-
+    # if not os.path.exists(frozen_graph_path):  # check frozen_graph_path is existed
+    #    tf_saved2frozen(config, checkpoint_path,
+    #                    tmp_dir)  # export saved model to frozen graph, tmp_dir : frozen graph path
+    path_tf_model = os.path.join(TF_MODEL_DIR, MODEL_NAME)
     # surge TF model Graph for ONNX model conversion
-    input_name, output_name = tf_gs(config, input_name=TRT_INPUT_NAME, output_name=TRT_OUTPUT_NAME,
-          onnx_work_dir=ONNX_WORK_SPACE, tmp_dir=tmp_dir, path_graph_pb=path_graph_pb, path_tf_custom_op=TF_CUSTOM_OP)
+    input_name, output_name = tf_gs(path_tf_model = path_tf_model,
+                                    input_name=TRT_INPUT_NAME, output_name=TRT_OUTPUT_NAME,
+                                    onnx_work_dir=ONNX_WORK_SPACE, path_graph_pb=path_graph_pb, path_tf_custom_op=TF_CUSTOM_OP)
 
     print('---- start onnx conversion with surged tf model ----')
 

@@ -3,11 +3,13 @@ import subprocess
 import tensorflow as tf
 import graphsurgeon as gs
 from tensorflow.python.framework import function_def_to_graph as f2g
-from Utils.ssd_utils_v2 import get_feature_map_shape
+from Utils.ssd_utils_v2 import get_feature_map_shape, load_config
 from tf_onnx import load_customer_op
 
-def tf_graphsurgeon(config, input_name=None, output_name=None,
-                    onnx_work_dir=None, tmp_dir=None, path_graph_pb=None, path_tf_custom_op=None):
+def tf_graphsurgeon(path_tf_model = None, input_name=None, output_name=None,
+                    onnx_work_dir=None, path_graph_pb=None, path_tf_custom_op=None):
+
+    config = load_config(os.path.join(path_tf_model, "pipeline.config"))
     # get input shape
     channels = 3
     height = config.model.ssd.image_resizer.fixed_shape_resizer.height
@@ -23,7 +25,7 @@ def tf_graphsurgeon(config, input_name=None, output_name=None,
         subprocess.call(['rm', '-r', tmp_tbdir_d])
     subprocess.call(['mkdir', '-p', tmp_tbdir_d])
 
-    saved_model = tf.saved_model.load(tmp_dir)
+    saved_model = tf.saved_model.load(os.path.join(path_tf_model, 'saved_model'))
     g_serving = saved_model.signatures["serving_default"]  # creat tf Graph objects
     g = g_serving.graph
     g_def = g.as_graph_def()
