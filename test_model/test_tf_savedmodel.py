@@ -30,10 +30,12 @@ g = g_serving.graph
 # meta_graph : https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/saved_model/load.py#L1019
 # parse saved_model : https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/saved_model/loader_impl.py#L46
 # model_msg = tf.compat.v1.MetaGraphDef()
-mpb = parse_saved_model('/home/cuterbot/temp/example-model')
-# mpb = parse_saved_model("/home/cuterbot/Data_Repo/Model_Conversion/SSD_mobilenet/TF_Model/ssd_mobilenet_v2_320x320_coco17_tpu-8/saved_model")
-meta_graph = mpb.meta_graphs[0]
-list_fname = [s.signature.name for s in meta_graph.graph_def.library.function]
+mpb_1 = parse_saved_model('/home/cuterbot/temp/example-model')
+mpb_2 = parse_saved_model("/home/cuterbot/Data_Repo/Model_Conversion/SSD_mobilenet/TF_Model/ssd_mobilenet_v2_320x320_coco17_tpu-8/saved_model")
+meta_graph_1 = mpb_1.meta_graphs[0]
+meta_graph_2 = mpb_2.meta_graphs[0]
+list_fname_1 = [s.signature.name for s in meta_graph_1.graph_def.library.function]
+list_fname_2 = [s.signature.name for s in meta_graph_2.graph_def.library.function]
 # with tf.io.gfile.GFile('/home/cuterbot/temp/example-model/saved_model.pb', 'rb') as f:
 #  model_msg.MergeFromString(f.read())
   # text_format.Parse(f.read(), model_def)
