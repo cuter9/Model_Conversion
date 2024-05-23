@@ -24,6 +24,7 @@ saved_model = tf.saved_model.load('/home/cuterbot/temp/example-model')
 g_serving = saved_model.signatures["capture_fn"]
 g = g_serving.graph
 
+# MetaGraphDef : https://www.tensorflow.org/versions/r2.9/api_docs/python/tf/compat/v1/MetaGraphDef
 # meta_graph : https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/saved_model/load.py#L1019
 # parse saved_model : https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/saved_model/loader_impl.py#L46
 # model_msg = tf.compat.v1.MetaGraphDef()
