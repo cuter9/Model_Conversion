@@ -1,5 +1,6 @@
+# Example of https://blog.tensorflow.org/2021/03/a-tour-of-savedmodel-signatures.html
 import tensorflow as tf
-from google.protobuf.message import Message
+# from google.protobuf.message import Message
 from tensorflow.python.saved_model.loader_impl import parse_saved_model
 class ExampleModel(tf.Module):
 
@@ -32,6 +33,7 @@ g = g_serving.graph
 mpb = parse_saved_model('/home/cuterbot/temp/example-model')
 # mpb = parse_saved_model("/home/cuterbot/Data_Repo/Model_Conversion/SSD_mobilenet/TF_Model/ssd_mobilenet_v2_320x320_coco17_tpu-8/saved_model")
 meta_graph = mpb.meta_graphs[0]
+list_fname = [s.signature.name for s in meta_graph.graph_def.library.function]
 # with tf.io.gfile.GFile('/home/cuterbot/temp/example-model/saved_model.pb', 'rb') as f:
 #  model_msg.MergeFromString(f.read())
   # text_format.Parse(f.read(), model_def)
