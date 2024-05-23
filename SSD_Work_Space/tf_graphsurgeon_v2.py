@@ -6,7 +6,7 @@ from tensorflow.python.framework import function_def_to_graph as f2g
 from Utils.ssd_utils_v2 import get_feature_map_shape, load_config
 from tf_onnx import load_customer_op
 
-def tf_graphsurgeon(path_tf_model = None, input_name=None, output_name=None,
+def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
                     onnx_work_dir=None, path_graph_pb=None, path_tf_custom_op=None):
 
     config = load_config(os.path.join(path_tf_model, "pipeline.config"))
@@ -46,7 +46,7 @@ def tf_graphsurgeon(path_tf_model = None, input_name=None, output_name=None,
     g_cap_map_list = list(g.captures)
     g_cap_shape = [b[0]._handle_data.shape_and_type[0].shape for b in g_cap_map_list]
     var_shape = [v.handle._handle_data.shape_and_type[0].shape for v in g.variables]
-    assert g_cap_shape == var_shape, 'captures in not the same as variables'
+    assert g_cap_shape == var_shape, 'captures is not the same as variables'
 
     # Convert a FunctionDef used in the TF v2 ssd model to a GraphDefTF
     # https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/framework/function_def_to_graph.py

@@ -59,11 +59,14 @@ def ssd_pipeline_to_onnx(checkpoint_path, config_path,
     print('---- start converting tf ssd to onnx model ----')
     print('---- start graphsurgeon tf ssd for onnx model conversion----')
 
+    # the following use tf.export to export and saved the tf saved model in a temporary directory
     # config = load_config(config_path)
-    frozen_graph_path = os.path.join(tmp_dir, FROZEN_GRAPH_NAME)
+    # frozen_graph_path = os.path.join(tmp_dir, FROZEN_GRAPH_NAME)
     # if not os.path.exists(frozen_graph_path):  # check frozen_graph_path is existed
     #    tf_saved2frozen(config, checkpoint_path,
     #                    tmp_dir)  # export saved model to frozen graph, tmp_dir : frozen graph path
+
+    # load and process directly the tf saved model instated of temporary directory method above
     path_tf_model = os.path.join(TF_MODEL_DIR, MODEL_NAME)
     # surge TF model Graph for ONNX model conversion
     input_name, output_name = tf_gs(path_tf_model = path_tf_model,
