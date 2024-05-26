@@ -88,7 +88,7 @@ if os.path.isdir(tmp_tbdir_s_2):
   subprocess.call(['rm', '-r', tmp_tbdir_s_2])
 subprocess.call(['mkdir', '-p', tmp_tbdir_s_2])
 
-writer_s_2 = tf.summary.create_file_writer(tmp_tbdir_s_1)
+writer_s_2 = tf.summary.create_file_writer(tmp_tbdir_s_2)
 with writer_s_2.as_default():
   #    tf.summary.graph(graph_def_spc)
   # tf.summary.graph(meta_graph_2.graph_def)
