@@ -4,6 +4,7 @@ import subprocess
 import tensorflow as tf
 # from google.protobuf.message import Message
 from tensorflow.python.saved_model.loader_impl import parse_saved_model
+from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
 import os
 class ExampleModel(tf.Module):
 
@@ -25,6 +26,7 @@ class ExampleModel(tf.Module):
   def polymorphic_fn(self, x):
     return tf.constant(3.0) * x
 
+# tf.config.run_functions_eagerly(True)
 model = ExampleModel()
 model.polymorphic_fn(tf.constant(4.0))
 model.polymorphic_fn(tf.constant([1.0, 2.0, 3.0]))
@@ -39,6 +41,20 @@ g1_def = g1.as_graph_def()
 spc_1 = [n for n in g1_serving.function_def.node_def if n.name == 'StatefulPartitionedCall']
 spc_1_name = spc_1[0].attr['f'].func.name
 spc_1_map_g1_cap_in = [[in_arg, vars_in] for in_arg, vars_in in zip(g1._functions[spc_1_name].signature.input_arg[-len(g1.variables):], g1.variables)]
+# with tf.io.gfile.GFile('/home/cuterbot/temp/example-model/saved_model.pb', 'rb') as f:
+#  model_msg.MergeFromString(f.read())
+  # text_format.Parse(f.read(), model_def)
+
+tmp_tbdir_s_1 = os.path.join("/home/cuterbot/temp/", "tf_board_data_s_1")  # for storing static graph
+if os.path.isdir(tmp_tbdir_s_1):
+  subprocess.call(['rm', '-r', tmp_tbdir_s_1])
+subprocess.call(['mkdir', '-p', tmp_tbdir_s_1])
+
+writer_s_1 = tf.summary.create_file_writer(tmp_tbdir_s_1)
+with writer_s_1.as_default():
+  #    tf.summary.graph(graph_def_spc)
+  # tf.summary.graph(meta_graph_1.graph_def)
+  tf.summary.graph(g1_def)
 
 
 saved_model_2 = tf.saved_model.load('/home/cuterbot/Data_Repo/Model_Conversion/SSD_mobilenet/TF_Model/ssd_mobilenet_v2_320x320_coco17_tpu-8/saved_model')
@@ -49,6 +65,26 @@ g2_def = g2.as_graph_def()
 spc_2 = [n for n in g2_serving.function_def.node_def if n.name == 'StatefulPartitionedCall']
 spc_2_name = spc_2[0].attr['f'].func.name
 spc_2_map_g2_cap_in = [[in_arg, vars_in] for in_arg, vars_in in zip(g2._functions[spc_2_name].signature.input_arg[-len(g2.variables):], g2.variables)]
+
+#https://medium.com/@sebastingarcaacosta/how-to-export-a-tensorflow-2-x-keras-model-to-a-frozen-and-optimized-graph-39740846d9eb
+g2_freezen = convert_variables_to_constants_v2(g2_serving)
+g2_freezen_gdef = g2_freezen.graph.as_graph_def()
+# Save frozen graph from frozen ConcreteFunction to hard drive
+# tf.io.write_graph(graph_or_graph_def=g2_freezen_gdef,
+#                  logdir="./frozen_models",
+#                  name="simple_frozen_graph.pb",
+#                  as_text=False)
+
+tmp_tbdir_s_2 = os.path.join("/home/cuterbot/temp/", "tf_board_data_s_2")  # for storing static graph
+if os.path.isdir(tmp_tbdir_s_2):
+  subprocess.call(['rm', '-r', tmp_tbdir_s_2])
+subprocess.call(['mkdir', '-p', tmp_tbdir_s_2])
+
+writer_s_2 = tf.summary.create_file_writer(tmp_tbdir_s_2)
+with writer_s_2.as_default():
+  #    tf.summary.graph(graph_def_spc)
+  # tf.summary.graph(meta_graph_2.graph_def)
+  tf.summary.graph(g2_freezen_gdef)
 
 # https://www.tensorflow.org/guide/saved_model#the_savedmodel_format_on_disk : A SavedModel contains one or more model variants (technically, v1.MetaGraphDefs), identified by their tag-sets.
 # MetaGraphDef : https://www.tensorflow.org/versions/r2.9/api_docs/python/tf/compat/v1/MetaGraphDef
@@ -69,30 +105,6 @@ sig_2 = [s for s in cfs_2_name if 'wrapper' in s.split('_')]
 cfs_2_sig = cfs_2[sig_2[0]]
 gdf_2_sig = [g for g in gdf_2.library.function if 'wrapper' in g.signature.name.split('_')]
 
-# with tf.io.gfile.GFile('/home/cuterbot/temp/example-model/saved_model.pb', 'rb') as f:
-#  model_msg.MergeFromString(f.read())
-  # text_format.Parse(f.read(), model_def)
-tmp_tbdir_s_1 = os.path.join("/home/cuterbot/temp/", "tf_board_data_s_1")  # for storing static graph
-if os.path.isdir(tmp_tbdir_s_1):
-  subprocess.call(['rm', '-r', tmp_tbdir_s_1])
-subprocess.call(['mkdir', '-p', tmp_tbdir_s_1])
-
-writer_s_1 = tf.summary.create_file_writer(tmp_tbdir_s_1)
-with writer_s_1.as_default():
-  #    tf.summary.graph(graph_def_spc)
-  # tf.summary.graph(meta_graph_1.graph_def)
-  tf.summary.graph(g1_def)
-
-tmp_tbdir_s_2 = os.path.join("/home/cuterbot/temp/", "tf_board_data_s_2")  # for storing static graph
-if os.path.isdir(tmp_tbdir_s_2):
-  subprocess.call(['rm', '-r', tmp_tbdir_s_2])
-subprocess.call(['mkdir', '-p', tmp_tbdir_s_2])
-
-writer_s_2 = tf.summary.create_file_writer(tmp_tbdir_s_2)
-with writer_s_2.as_default():
-  #    tf.summary.graph(graph_def_spc)
-  # tf.summary.graph(meta_graph_2.graph_def)
-  tf.summary.graph(g2_def)
 
 a = 1
 
