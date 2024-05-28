@@ -5,6 +5,7 @@ import graphsurgeon as gs
 from tensorflow.python.framework import function_def_to_graph as f2g
 from Utils.ssd_utils_v2 import get_feature_map_shape, load_config
 from tf_onnx import load_customer_op
+from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
 
 def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
                     onnx_work_dir=None, path_graph_pb=None, path_tf_custom_op=None):
@@ -15,22 +16,35 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
     height = config.model.ssd.image_resizer.fixed_shape_resizer.height
     width = config.model.ssd.image_resizer.fixed_shape_resizer.width
 
-    tmp_tbdir_s = os.path.join(onnx_work_dir, "tf_board_data_s")  # for storing static graph
-    if os.path.isdir(tmp_tbdir_s):
-        subprocess.call(['rm', '-r', tmp_tbdir_s])
-    subprocess.call(['mkdir', '-p', tmp_tbdir_s])
-
-    tmp_tbdir_d = os.path.join(onnx_work_dir, "tf_board_data_d")  # for storing dynamic graph
-    if os.path.isdir(tmp_tbdir_d):
-        subprocess.call(['rm', '-r', tmp_tbdir_d])
-    subprocess.call(['mkdir', '-p', tmp_tbdir_d])
-
     saved_model = tf.saved_model.load(os.path.join(path_tf_model, 'saved_model'))
-    g_serving = saved_model.signatures["serving_default"]  # creat tf Graph objects
+    g_sig = saved_model.signatures["serving_default"]  # creat tf Graph objects
+    # g_def = g_sig.graph.as_graph_def()
+    g_freezen = convert_variables_to_constants_v2(g_sig)
+    g_freezen_gdef = g_freezen.graph.as_graph_def()
+    static_graph = gs.StaticGraph(g_freezen_gdef)
+    '''
+    s = []
+    for n in g_freezen_gdef.node:
+        if 'StatefulPartitionedCall' in n.name.split('/'):
+            n.name = '/'.join(n.name.split('/')[1:])
+ 
+        for ni in range(len(n.input)):
+            if 'StatefulPartitionedCall' in n.input[ni].split('/'):
+                n.input[ni] = '/'.join(n.input[ni].split('/'))
+
+        # for no in n.output:
+        #    if 'StatefulPartitionedCall' in no.split('/'):
+        #        no = '/'.join(no.split('/')[1:])
+
+        s.append(n)
+    '''
+    '''
     g = g_serving.graph
-    g_def = g.as_graph_def()
+    g_def = g.as_graph_def()    
+
     g_def_lib_func = g_def.library.function
     static_graph = gs.StaticGraph(g_def)
+    '''
     # static_graph.lib_func = g_def_lib_func
     # static_graph = gs.StaticGraph(frozen_graph_path)
     # static_graph.write_tensorboard(tmp_tbdir_s)       # TensorRT use TF v1 to write graph which can not be used in TF v2
@@ -39,8 +53,9 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
     # with writer_s.as_default():
     #    tf.summary.graph(g_def)
 
-    dynamic_graph = gs.DynamicGraph(g_def)
-
+    '''
+    dynamic_graph = gs.DynamicGraph(g_freezen_gdef)
+    
     # https://blog.tensorflow.org/2021/03/a-tour-of-savedmodel-signatures.html
     # https://github.com/tensorflow/tensorflow/blob/255a314badfe538f7ddaa6345ef774755973143d/tensorflow/python/saved_model/load.py#L332
     g_cap_map_list = list(g.captures)
@@ -63,12 +78,18 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
         nd_vsc.append([n for n in graph_def_spc.node if vn[-2] in n.name.split('/') and n.op != 'ReadVariableOp'])
 
     dynamic_graph_spc = gs.DynamicGraph(graph_def_spc)
+    '''
+    tmp_tbdir_s = os.path.join(onnx_work_dir, "tf_board_data_s")  # for storing static graph
+    if os.path.isdir(tmp_tbdir_s):
+        subprocess.call(['rm', '-r', tmp_tbdir_s])
+    subprocess.call(['mkdir', '-p', tmp_tbdir_s])
 
     writer_s = tf.summary.create_file_writer(tmp_tbdir_s)
     with writer_s.as_default():
     #    tf.summary.graph(graph_def_spc)
-        tf.summary.graph(g_def)
+        tf.summary.graph(g_freezen_gdef)
 
+    '''
     all_noop_nodes = dynamic_graph_spc.find_nodes_by_op("NoOp")
     all_resources_nodes = dynamic_graph_spc.find_nodes_by_op("ReadVariableOp")
     name_nd_rsc = [n.name for n in all_resources_nodes]
@@ -87,17 +108,33 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
         # else:
         # print(n_idx, [])
         # n_idx += 1
-
+    
     # dynamic_graph_spc.forward_inputs(all_resources_nodes)
-    dynamic_graph_spc.remove(all_resources_nodes, remove_exclusive_dependencies=False)
-
+    # dynamic_graph_spc.remove(all_resources_nodes, remove_exclusive_dependencies=False)
+    
     writer_d = tf.summary.create_file_writer(tmp_tbdir_d)
     with writer_d.as_default():
         tf.summary.graph(dynamic_graph_spc.as_graph_def())
+    '''
+
+    dynamic_graph = gs.DynamicGraph(g_freezen_gdef)
 
     # forward all identity nodes
-    all_identity_nodes = dynamic_graph_spc.find_nodes_by_op("Identity")
-    dynamic_graph_spc.forward_inputs(all_identity_nodes)
+    all_identity_nodes = dynamic_graph.find_nodes_by_op("Identity")
+    dynamic_graph.forward_inputs(all_identity_nodes)
+
+    # f_nd = dynamic_graph.find_nodes_by_path("Func")
+    all_noop_nodes = dynamic_graph.find_nodes_by_op("NoOp")
+    dynamic_graph.remove(all_noop_nodes, remove_exclusive_dependencies=False)
+
+    tmp_tbdir_d = os.path.join(onnx_work_dir, "tf_board_data_d")  # for storing dynamic graph
+    if os.path.isdir(tmp_tbdir_d):
+        subprocess.call(['rm', '-r', tmp_tbdir_d])
+    subprocess.call(['mkdir', '-p', tmp_tbdir_d])
+
+    writer_d = tf.summary.create_file_writer(tmp_tbdir_d)
+    with writer_d.as_default():
+        tf.summary.graph(dynamic_graph.as_graph_def())
 
     # create input plugin
     input_plugin = gs.create_node(
@@ -173,16 +210,16 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
 
     # transform (map) tf namespace to trt namespace --> tf namespace : trt namespace
     namespace_plugin_map = {
-        "MultipleGridAnchorGenerator": priorbox_plugin,
-        "Postprocessor": nms_plugin,
-        "Preprocessor": input_plugin,
-        "Cast": input_plugin,
-        "ToFloat": input_plugin,
-        "image_tensor": input_plugin,
-        "Concatenate": priorbox_concat_plugin,
-        "Squeeze": squeeze_plugin,
-        "concat": boxloc_concat_plugin,
-        "concat_1": boxconf_concat_plugin
+        "StatefulPartitionedCall/MultipleGridAnchorGenerator": priorbox_plugin,
+        "StatefulPartitionedCall/Postprocessor": nms_plugin,
+        "StatefulPartitionedCall/Preprocessor": input_plugin,
+        "StatefulPartitionedCall/Cast": input_plugin,
+        "StatefulPartitionedCall/ToFloat": input_plugin,
+        "StatefulPartitionedCall/image_tensor": input_plugin,
+        "StatefulPartitionedCall/Concatenate": priorbox_concat_plugin,
+        "StatefulPartitionedCall/Squeeze": squeeze_plugin,
+        "StatefulPartitionedCall/concat": boxloc_concat_plugin,
+        "StatefulPartitionedCall/concat_1": boxconf_concat_plugin
     }
 
     dynamic_graph.collapse_namespaces(namespace_plugin_map)

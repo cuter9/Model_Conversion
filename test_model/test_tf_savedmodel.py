@@ -6,6 +6,7 @@ import tensorflow as tf
 from tensorflow.python.saved_model.loader_impl import parse_saved_model
 from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
 import os
+'''
 class ExampleModel(tf.Module):
 
   @tf.function(input_signature=[tf.TensorSpec(shape=(), dtype=tf.float32)])
@@ -32,15 +33,16 @@ model.polymorphic_fn(tf.constant(4.0))
 model.polymorphic_fn(tf.constant([1.0, 2.0, 3.0]))
 tf.saved_model.save(
     model, "/home/cuterbot/temp/example-model", signatures={'capture_fn': model.capture_fn})
-
+'''
 saved_model_1 = tf.saved_model.load('/home/cuterbot/temp/example-model')
 g1_serving = saved_model_1.signatures["capture_fn"]
 g1 = g1_serving.graph
 g1_def = g1.as_graph_def()
-# mapping the input arguments of concrete function spc function called and the variables out of the spc function
+'''# mapping the input arguments of concrete function spc function called and the variables out of the spc function
 spc_1 = [n for n in g1_serving.function_def.node_def if n.name == 'StatefulPartitionedCall']
 spc_1_name = spc_1[0].attr['f'].func.name
 spc_1_map_g1_cap_in = [[in_arg, vars_in] for in_arg, vars_in in zip(g1._functions[spc_1_name].signature.input_arg[-len(g1.variables):], g1.variables)]
+'''
 # with tf.io.gfile.GFile('/home/cuterbot/temp/example-model/saved_model.pb', 'rb') as f:
 #  model_msg.MergeFromString(f.read())
   # text_format.Parse(f.read(), model_def)
@@ -61,11 +63,11 @@ saved_model_2 = tf.saved_model.load('/home/cuterbot/Data_Repo/Model_Conversion/S
 g2_serving = saved_model_2.signatures["serving_default"]
 g2 = g2_serving.graph
 g2_def = g2.as_graph_def()
-# mapping the input arguments of concrete function spc function called and the variables out of the spc function
+'''# mapping the input arguments of concrete function spc function called and the variables out of the spc function
 spc_2 = [n for n in g2_serving.function_def.node_def if n.name == 'StatefulPartitionedCall']
 spc_2_name = spc_2[0].attr['f'].func.name
 spc_2_map_g2_cap_in = [[in_arg, vars_in] for in_arg, vars_in in zip(g2._functions[spc_2_name].signature.input_arg[-len(g2.variables):], g2.variables)]
-
+'''
 #https://medium.com/@sebastingarcaacosta/how-to-export-a-tensorflow-2-x-keras-model-to-a-frozen-and-optimized-graph-39740846d9eb
 g2_freezen = convert_variables_to_constants_v2(g2_serving)
 g2_freezen_gdef = g2_freezen.graph.as_graph_def()
@@ -86,6 +88,7 @@ with writer_s_2.as_default():
   # tf.summary.graph(meta_graph_2.graph_def)
   tf.summary.graph(g2_freezen_gdef)
 
+'''
 # https://www.tensorflow.org/guide/saved_model#the_savedmodel_format_on_disk : A SavedModel contains one or more model variants (technically, v1.MetaGraphDefs), identified by their tag-sets.
 # MetaGraphDef : https://www.tensorflow.org/versions/r2.9/api_docs/python/tf/compat/v1/MetaGraphDef
 # meta_graph : https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/saved_model/load.py#L1019
@@ -104,7 +107,7 @@ cfs_2_name = list(cfs_2.keys())
 sig_2 = [s for s in cfs_2_name if 'wrapper' in s.split('_')]
 cfs_2_sig = cfs_2[sig_2[0]]
 gdf_2_sig = [g for g in gdf_2.library.function if 'wrapper' in g.signature.name.split('_')]
-
+'''
 
 a = 1
 
