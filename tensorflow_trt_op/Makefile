@@ -14,7 +14,7 @@ SQUEEZE_TRT_SRCS = $(wildcard $(DIR_SOURCE)/squeeze_trt/*.cc)
 TF_CFLAGS := $(shell $(PYTHON_BIN_PATH) -c 'import tensorflow as tf; print(" ".join(tf.sysconfig.get_compile_flags()))')
 TF_LFLAGS := $(shell $(PYTHON_BIN_PATH) -c 'import tensorflow as tf; print(" ".join(tf.sysconfig.get_link_flags()))')
 
-CFLAGS = ${TF_CFLAGS} -fPIC -O2 -std=c++11
+CFLAGS = ${TF_CFLAGS} -fPIC -O2 -std=c++14
 LDFLAGS = -shared ${TF_LFLAGS}
 
 GRID_ANCHOR_TRT_TARGET_LIB = $(DIR_OPLIB)/_grid_anchor_trt_ops.so

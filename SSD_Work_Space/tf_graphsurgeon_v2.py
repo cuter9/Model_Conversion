@@ -11,6 +11,13 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
                     onnx_work_dir=None, path_graph_pb=None, path_tf_custom_op=None):
 
     config = load_config(os.path.join(path_tf_model, "pipeline.config"))
+    ssd_config_path = os.path.join(onnx_work_dir, "ssd_config.txt")  # for storing static graph
+    if os.path.isfile(ssd_config_path):
+        subprocess.call(['rm', ssd_config_path])
+    # subprocess.call(['mkdir', '-p', ssd_config_dir])
+    with open(ssd_config_path, 'w') as f:
+        print(config, file = f)
+
     # get input shape
     channels = 3
     height = config.model.ssd.image_resizer.fixed_shape_resizer.height
@@ -18,10 +25,31 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
 
     saved_model = tf.saved_model.load(os.path.join(path_tf_model, 'saved_model'))
     g_sig = saved_model.signatures["serving_default"]  # creat tf Graph objects
-    # g_def = g_sig.graph.as_graph_def()
+    g_def = g_sig.graph.as_graph_def()
+
+    tmp_tbdir_s_0 = os.path.join(onnx_work_dir, "tf_board_data_s_0")  # for storing static graph
+    if os.path.isdir(tmp_tbdir_s_0):
+        subprocess.call(['rm', '-r', tmp_tbdir_s_0])
+    subprocess.call(['mkdir', '-p', tmp_tbdir_s_0])
+
+    writer_s_0 = tf.summary.create_file_writer(tmp_tbdir_s_0)
+    with writer_s_0.as_default():
+    #    tf.summary.graph(graph_def_spc)
+        tf.summary.graph(g_def)
+
+
+    # https://medium.com/@sebastingarcaacosta/how-to-export-a-tensorflow-2-x-keras-model-to-a-frozen-and-optimized-graph-39740846d9eb
     g_freezen = convert_variables_to_constants_v2(g_sig)
-    g_freezen_gdef = g_freezen.graph.as_graph_def()
-    static_graph = gs.StaticGraph(g_freezen_gdef)
+    g_freezen_def = g_freezen.graph.as_graph_def()
+    static_graph = gs.StaticGraph(g_freezen_def)
+
+    for nd in g_freezen_def.node:
+        if nd.name.split('/')[0] == 'StatefulPartitionedCall':
+            nd.name = '/'.join(nd.name.split('/')[1:])
+        for ndi in range(len(nd.input)):
+            if nd.input[ndi].split('/')[0] == 'StatefulPartitionedCall':
+                nd.input[ndi] = '/'.join(nd.input[ndi].split('/')[1:])
+
     '''
     s = []
     for n in g_freezen_gdef.node:
@@ -87,7 +115,7 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
     writer_s = tf.summary.create_file_writer(tmp_tbdir_s)
     with writer_s.as_default():
     #    tf.summary.graph(graph_def_spc)
-        tf.summary.graph(g_freezen_gdef)
+        tf.summary.graph(g_freezen_def)
 
     '''
     all_noop_nodes = dynamic_graph_spc.find_nodes_by_op("NoOp")
@@ -117,7 +145,7 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
         tf.summary.graph(dynamic_graph_spc.as_graph_def())
     '''
 
-    dynamic_graph = gs.DynamicGraph(g_freezen_gdef)
+    dynamic_graph = gs.DynamicGraph(g_freezen_def)
 
     # forward all identity nodes
     all_identity_nodes = dynamic_graph.find_nodes_by_op("Identity")
@@ -127,6 +155,17 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
     all_noop_nodes = dynamic_graph.find_nodes_by_op("NoOp")
     dynamic_graph.remove(all_noop_nodes, remove_exclusive_dependencies=False)
 
+    tmp_tbdir_d_0 = os.path.join(onnx_work_dir, "tf_board_data_d_0")  # for storing dynamic graph
+    if os.path.isdir(tmp_tbdir_d_0):
+        subprocess.call(['rm', '-r', tmp_tbdir_d_0])
+    subprocess.call(['mkdir', '-p', tmp_tbdir_d_0])
+
+    writer_d_0 = tf.summary.create_file_writer(tmp_tbdir_d_0)
+    with writer_d_0.as_default():
+        tf.summary.graph(dynamic_graph.as_graph_def())
+
+
+    '''
     tmp_tbdir_d = os.path.join(onnx_work_dir, "tf_board_data_d")  # for storing dynamic graph
     if os.path.isdir(tmp_tbdir_d):
         subprocess.call(['rm', '-r', tmp_tbdir_d])
@@ -135,6 +174,7 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
     writer_d = tf.summary.create_file_writer(tmp_tbdir_d)
     with writer_d.as_default():
         tf.summary.graph(dynamic_graph.as_graph_def())
+    '''
 
     # create input plugin
     input_plugin = gs.create_node(
@@ -208,26 +248,46 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
         ignoreBatch=0
     )
 
+    # create output plugin
+    output_plugin = gs.create_node(
+        name="output",
+        op="Identity",
+        dtype=tf.float32,
+        # dtype=tf.uint8,
+        shape=[1, 1, nms_config.max_total_detections, 7])
+
+    dynamic_graph.append(output_plugin)
+
     # transform (map) tf namespace to trt namespace --> tf namespace : trt namespace
     namespace_plugin_map = {
-        "StatefulPartitionedCall/MultipleGridAnchorGenerator": priorbox_plugin,
-        "StatefulPartitionedCall/Postprocessor": nms_plugin,
-        "StatefulPartitionedCall/Preprocessor": input_plugin,
-        "StatefulPartitionedCall/Cast": input_plugin,
-        "StatefulPartitionedCall/ToFloat": input_plugin,
-        "StatefulPartitionedCall/image_tensor": input_plugin,
-        "StatefulPartitionedCall/Concatenate": priorbox_concat_plugin,
-        "StatefulPartitionedCall/Squeeze": squeeze_plugin,
-        "StatefulPartitionedCall/concat": boxloc_concat_plugin,
-        "StatefulPartitionedCall/concat_1": boxconf_concat_plugin
+        "MultipleGridAnchorGenerator": priorbox_plugin,
+        "Postprocessor": nms_plugin,
+        "Identity_1": output_plugin,
+        "Identity_2": output_plugin,
+        "Identity_3": output_plugin,
+        "Identity_4": output_plugin,
+        "Identity_5": output_plugin,
+        "Identity_6": output_plugin,
+        "Identity_7": output_plugin,
+        "Preprocessor": input_plugin,
+        "Cast": input_plugin,
+        "input_tensor": input_plugin,
+        "image_tensor": input_plugin,
+        "Concatenate": priorbox_concat_plugin,
+        "Squeeze": squeeze_plugin,
+        "concat": boxloc_concat_plugin,
+        "concat_1": boxconf_concat_plugin
     }
 
-    dynamic_graph.collapse_namespaces(namespace_plugin_map)
+    dynamic_graph.collapse_namespaces(namespace_plugin_map, exclude_nodes=[output_plugin])
 
     namespace_remove = {
         "Cast",
+        "add",
+        "Cast_1",
         "ToFloat",
-        "Preprocessor"
+        "Identity",
+        "Preprocessor",
     }
 
     dynamic_graph.remove(
@@ -247,11 +307,36 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
 
     dynamic_graph.remove(
         dynamic_graph.graph_outputs, remove_exclusive_dependencies=False)
-
+    '''
+    nd_outputs = dynamic_graph.node_outputs
+    for nd_name, nd in nd_outputs.items():
+        for n in nd:
+            if n.name.split('/')[0] == 'StatefulPartitionedCall':
+                n.name = '/'.join(n.name.split('/')[1:])
+            for ni in range(len(n.input)):
+                if n.input[ni].split('/')[0] == 'StatefulPartitionedCall':
+                    n.input[ni] = '/'.join(n.input[ni].split('/')[1:])
+    
+    for n in nd_outputs['nms']:
+        n.name = '/'.join(n.name.split('/')[1:])
+        for ni in range(len(n.input)):
+            if n.input[ni].split('/')[0] == 'StatefulPartitionedCall':
+                if dynamic_graph.find_nodes_by_name(n.input[ni]):
+                    _n = dynamic_graph.find_nodes_by_name(n.input[ni])[0]
+                    _n.name = '/'.join(n.input[ni].split('/')[1:])
+                n.input[ni] = '/'.join(n.input[ni].split('/')[1:])
+    '''
     print('---- the graphsurgeon tf ssd completed ----', '\n',
           '---- store the surged tf model to ', path_graph_pb, 'for onnx conversion ---- \n')
+
+
     # dynamic_graph.write_tensorboard(tmp_tbdir_d)
     # dynamic_graph.write(path_graph_pb)  # store the surged tf model
+    tmp_tbdir_d = os.path.join(onnx_work_dir, "tf_board_data_d")  # for storing dynamic graph
+    if os.path.isdir(tmp_tbdir_d):
+        subprocess.call(['rm', '-r', tmp_tbdir_d])
+    subprocess.call(['mkdir', '-p', tmp_tbdir_d])
+
     writer_d = tf.summary.create_file_writer(tmp_tbdir_d)
     with writer_d.as_default():
         tf.summary.graph(dynamic_graph.as_graph_def())

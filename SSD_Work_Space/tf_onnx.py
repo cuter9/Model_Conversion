@@ -136,20 +136,23 @@ def load_customer_op(op_path):
     # while converting tf model to trt model through onnx model
     # dir_path_op = './"tensorflow_trt_op/python3/ops/set'  # the directory stored the custom op library
     # dir_path_op_1 = 'tensorflow_trt_op/python3/ops/set'
-    dir_path_op = "./" + op_path  # the directory stored the custom op library
-    dir_path_op_1 = op_path
-    ops_list = os.listdir(dir_path_op)
+    # dir_path_op = "./" + op_path  # the directory stored the custom op library
+    # dir_path_op_1 = op_path
+    # ops_list = os.listdir(dir_path_op)
+    ops_list = os.listdir(op_path)
     print("the custom ops list to be loaded for tf parsing --- ", ops_list)
     tf_op = []
     for ol in ops_list:
-        print('--- load custom op library : ', os.path.join(dir_path_op, ol))
+        print('--- load custom op library : ', os.path.join(op_path, ol))
         try:
-            tf_op.append(tf.load_op_library(os.path.join(dir_path_op, ol)))
+            _ol = tf.load_op_library(os.path.join(op_path, ol))
+            tf_op.append(_ol)
             # tf.load_op_library(os.path.join(dir_path_op, ol))
         except:
-            tf_op.append(tf.load_op_library(os.path.join(dir_path_op_1, ol)))
+            _ol = tf.load_op_library(os.path.join(op_path, ol))
+            tf_op.append(ol)
             # tf.load_op_library(os.path.join(dir_path_op_1, ol))
-    return
+    return tf_op
 
 
 def modify_node_attr(graph_def):
