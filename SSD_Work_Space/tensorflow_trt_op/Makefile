@@ -14,8 +14,10 @@ SQUEEZE_TRT_SRCS = $(wildcard $(DIR_SOURCE)/squeeze_trt/*.cc)
 TF_CFLAGS := $(shell $(PYTHON_BIN_PATH) -c 'import tensorflow as tf; print(" ".join(tf.sysconfig.get_compile_flags()))')
 TF_LFLAGS := $(shell $(PYTHON_BIN_PATH) -c 'import tensorflow as tf; print(" ".join(tf.sysconfig.get_link_flags()))')
 
-CFLAGS = ${TF_CFLAGS} -fPIC -O2 -std=c++11
-LDFLAGS = -shared ${TF_LFLAGS}
+# CFLAGS = ${TF_CFLAGS} -fPIC -O2 -std=c++11
+CFLAGS = ${TF_LFLAGS} -fPIC -O2 -std=c++14
+LDFLAGS = ${TF_LFLAGS}
+# LDFLAGS = -shared ${TF_LFLAGS}
 
 GRID_ANCHOR_TRT_TARGET_LIB = $(DIR_OPLIB)/_grid_anchor_trt_ops.so
 FLATTERN_CONCAT_TRT_TARGET_LIB = $(DIR_OPLIB)/_flattern_concat_trt_ops.so
@@ -31,9 +33,12 @@ $(TRT_LIB): $(GRID_ANCHOR_TRT_SRCS) $(FLATTERN_CONCAT_TRT_SRCS) $(CONCAT_TRT_SRC
 	$(CXX) $(CFLAGS) -o $@ $^ ${LDFLAGS}
 
 # grid_anchor_trt op for CPU
-grid_anchor_trt_op: $(GRID_ANCHOR_TRT_TARGET_LIB)
-$(GRID_ANCHOR_TRT_TARGET_LIB): $(GRID_ANCHOR_TRT_SRCS)
-	$(CXX) $(CFLAGS) -o $@ $^ ${LDFLAGS}
+# grid_anchor_trt_op: $(GRID_ANCHOR_TRT_TARGET_LIB)
+# $(GRID_ANCHOR_TRT_TARGET_LIB): $(GRID_ANCHOR_TRT_SRCS)
+#	$(CXX) $(CFLAGS) -o $@ $^ $(CFLAGS) ${LDFLAGS}
+
+grid_anchor_trt_op: $(GRID_ANCHOR_TRT_SRCS)
+	$(CXX) -shared $^ -o $@ $(CFLAGS) $(LDFLAGS)
 
 # flattern_concat_trt op for CPU
 flattern_concat_trt_op: $(FLATTERN_CONCAT_TRT_TARGET_LIB)
