@@ -27,7 +27,7 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
     g_sig = saved_model.signatures["serving_default"]  # creat tf Graph objects
     g_def = g_sig.graph.as_graph_def()
 
-    tmp_tbdir_s_0 = os.path.join(onnx_work_dir, "tf_board_data_s_0")  # for storing static graph
+    tmp_tbdir_s_0 = os.path.join(onnx_work_dir, "tf_board_data_s_0")  # for storing static graph before frozen
     if os.path.isdir(tmp_tbdir_s_0):
         subprocess.call(['rm', '-r', tmp_tbdir_s_0])
     subprocess.call(['mkdir', '-p', tmp_tbdir_s_0])
@@ -39,16 +39,19 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
 
 
     # https://medium.com/@sebastingarcaacosta/how-to-export-a-tensorflow-2-x-keras-model-to-a-frozen-and-optimized-graph-39740846d9eb
-    g_freezen = convert_variables_to_constants_v2(g_sig)
-    g_freezen_def = g_freezen.graph.as_graph_def()
-    static_graph = gs.StaticGraph(g_freezen_def)
+    g_frozen = convert_variables_to_constants_v2(g_sig)
+    g_frozen_def = g_frozen.graph.as_graph_def()
+    static_graph = gs.StaticGraph(g_frozen_def)
 
-    for nd in g_freezen_def.node:
+    for nd in g_frozen_def.node:
         if nd.name.split('/')[0] == 'StatefulPartitionedCall':
             nd.name = '/'.join(nd.name.split('/')[1:])
         for ndi in range(len(nd.input)):
             if nd.input[ndi].split('/')[0] == 'StatefulPartitionedCall':
                 nd.input[ndi] = '/'.join(nd.input[ndi].split('/')[1:])
+        for ni in nd.input:
+            if ni.split('/')[0] == '^StatefulPartitionedCall':
+                nd.input.remove(ni)
 
     '''
     s = []
@@ -107,7 +110,7 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
 
     dynamic_graph_spc = gs.DynamicGraph(graph_def_spc)
     '''
-    tmp_tbdir_s = os.path.join(onnx_work_dir, "tf_board_data_s")  # for storing static graph
+    tmp_tbdir_s = os.path.join(onnx_work_dir, "tf_board_data_s")  # for storing static graph after frozen
     if os.path.isdir(tmp_tbdir_s):
         subprocess.call(['rm', '-r', tmp_tbdir_s])
     subprocess.call(['mkdir', '-p', tmp_tbdir_s])
@@ -115,7 +118,7 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
     writer_s = tf.summary.create_file_writer(tmp_tbdir_s)
     with writer_s.as_default():
     #    tf.summary.graph(graph_def_spc)
-        tf.summary.graph(g_freezen_def)
+        tf.summary.graph(g_frozen_def)
 
     '''
     all_noop_nodes = dynamic_graph_spc.find_nodes_by_op("NoOp")
@@ -145,7 +148,7 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
         tf.summary.graph(dynamic_graph_spc.as_graph_def())
     '''
 
-    dynamic_graph = gs.DynamicGraph(g_freezen_def)
+    dynamic_graph = gs.DynamicGraph(g_frozen_def)
 
     # forward all identity nodes
     all_identity_nodes = dynamic_graph.find_nodes_by_op("Identity")
@@ -155,7 +158,10 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
     all_noop_nodes = dynamic_graph.find_nodes_by_op("NoOp")
     dynamic_graph.remove(all_noop_nodes, remove_exclusive_dependencies=False)
 
-    tmp_tbdir_d_0 = os.path.join(onnx_work_dir, "tf_board_data_d_0")  # for storing dynamic graph
+    all_assert_nodes = dynamic_graph.find_nodes_by_op("Assert")
+    dynamic_graph.remove(all_assert_nodes, remove_exclusive_dependencies=False)
+
+    tmp_tbdir_d_0 = os.path.join(onnx_work_dir, "tf_board_data_d_0")  # for storing dynamic graph before insert TRT plugins
     if os.path.isdir(tmp_tbdir_d_0):
         subprocess.call(['rm', '-r', tmp_tbdir_d_0])
     subprocess.call(['mkdir', '-p', tmp_tbdir_d_0])
@@ -348,8 +354,10 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
     # input_name = [input_name]
     # output_name = [output_name]
 
+    dynamic_graph.write(path_graph_pb)  # store the surged tf model
+
     # ##load custom ops need for conversion from tf model to onnx model when parsing with tf backend
     # the custom ops can be constructed by the makefile in dir /tensorflow_trt_op
-    load_customer_op(path_tf_custom_op)
+    # load_customer_op(path_tf_custom_op)
 
-    return input_name, output_name
+    return input_name, output_name, path_tf_custom_op

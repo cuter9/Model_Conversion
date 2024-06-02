@@ -69,9 +69,13 @@ def ssd_pipeline_to_onnx(checkpoint_path, config_path,
     # load and process directly the tf saved model instated of temporary directory method above
     path_tf_model = os.path.join(TF_MODEL_DIR, MODEL_NAME)
     # surge TF model Graph for ONNX model conversion
-    input_name, output_name = tf_gs(path_tf_model = path_tf_model,
+    input_name, output_name, path_tf_custom_op = tf_gs(path_tf_model = path_tf_model,
                                     input_name=TRT_INPUT_NAME, output_name=TRT_OUTPUT_NAME,
                                     onnx_work_dir=ONNX_WORK_SPACE, path_graph_pb=path_graph_pb, path_tf_custom_op=TF_CUSTOM_OP)
+
+    # ##load custom ops need for conversion from tf model to onnx model when parsing with tf backend
+    # the custom ops can be constructed by the makefile in dir /tensorflow_trt_op
+    load_customer_op(path_tf_custom_op)
 
     print('---- start onnx conversion with surged tf model ----')
 
@@ -157,8 +161,10 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
         nd.inputs[1].values = np.array([1, -1, 1, 91])
 
     # insert transpose after BoxPredictor_5 boxconf
+#    node_to_boxconf_5_trnsp = [nd for nd in onnx_graph.nodes
+#                               if nd.name == "BoxPredictor_5/ClassPredictor/BiasAdd"][0]
     node_to_boxconf_5_trnsp = [nd for nd in onnx_graph.nodes
-                               if nd.name == "BoxPredictor_5/ClassPredictor/BiasAdd"][0]
+                               if nd.name == "BoxPredictor/ConvolutionalClassHead_5/ClassPredictor/BiasAdd"][0]
     input_boxconf_5_trnsp = node_to_boxconf_5_trnsp.outputs[0]
     output_boxconf_5_trnsp = gs_onnx.Variable(name="boxconf_5_trnsp_out", dtype=np.float32)
     node_boxconf_5_trnsp = gs_onnx.Node(op="Transpose", name="boxconf_5_trnsp",
@@ -167,12 +173,15 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
                                         outputs=[output_boxconf_5_trnsp]
                                         )
     onnx_graph.nodes.append(node_boxconf_5_trnsp)
-    node_reshape_boxconf_5 = [nd for nd in onnx_graph.nodes if nd.name == "BoxPredictor_5/Reshape_1"][0]
+#    node_reshape_boxconf_5 = [nd for nd in onnx_graph.nodes if nd.name == "BoxPredictor_5/Reshape_1"][0]
+    node_reshape_boxconf_5 = [nd for nd in onnx_graph.nodes if nd.name == "BoxPredictor/ConvolutionalClassHead_5/Reshape"][0]
     node_reshape_boxconf_5.inputs[0] = node_boxconf_5_trnsp.outputs[0]
 
     # insert transpose after BoxPredictor_5 boxloc
+#    node_to_boxloc_5_trnsp = [nd for nd in onnx_graph.nodes
+#                              if nd.name == "BoxPredictor_5/BoxEncodingPredictor/BiasAdd"][0]
     node_to_boxloc_5_trnsp = [nd for nd in onnx_graph.nodes
-                              if nd.name == "BoxPredictor_5/BoxEncodingPredictor/BiasAdd"][0]
+                              if nd.name == "BoxPredictor/ConvolutionalBoxHead_5/BoxEncodingPredictor/BiasAdd"][0]
     input_boxloc_5_trnsp = node_to_boxloc_5_trnsp.outputs[0]
     output_boxloc_5_trnsp = gs_onnx.Variable(name="boxloc_5_trnsp_out", dtype=np.float32)
     node_boxloc_5_trnsp = gs_onnx.Node(op="Transpose", name="boxloc_5_trnsp",
@@ -181,7 +190,8 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
                                        outputs=[output_boxloc_5_trnsp]
                                        )
     onnx_graph.nodes.append(node_boxloc_5_trnsp)
-    node_reshape_boxloc_5 = [nd for nd in onnx_graph.nodes if nd.name == "BoxPredictor_5/Reshape"][0]
+    # node_reshape_boxloc_5 = [nd for nd in onnx_graph.nodes if nd.name == "BoxPredictor_5/Reshape"][0]
+    node_reshape_boxloc_5 = [nd for nd in onnx_graph.nodes if nd.name == "BoxPredictor/ConvolutionalBoxHead_5/Reshape"][0]
     node_reshape_boxloc_5.inputs[0] = node_boxloc_5_trnsp.outputs[0]
 
     # node_GridAnchor_TRT, add dummy input
@@ -238,7 +248,7 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
     # *** use "SAME_UPPER" because it is the same padding operation as the "same" used in uff conv op
     for nd_conv in onnx_graph.nodes:
         if nd_conv.op == "Conv":
-            nd_conv.attrs["pads"] = []  # [0, 0, 1, 1] --> [1, 1, 0, 0]
+            # nd_conv.attrs["pads"] = []  # [0, 0, 1, 1] --> [1, 1, 0, 0]
             nd_conv.attrs["auto_pad"] = "SAME_UPPER"  # "SAME_LOWER"; "SAME_UPPER" is same as the "same" in uff conv op
 
     test_conv = False  # test the convolution op only, all the other ops and nodes will be removed
@@ -486,8 +496,8 @@ if __name__ == '__main__':
     path_onnx_model_new = os.path.join(MODEL_REPO_DIR, MODEL_NAME + "_new.onnx")
     redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new)  # redefine the trt plugin nodes
 
-    path_onnx_model_new_1 = os.path.join(MODEL_REPO_DIR, MODEL_NAME + "_1_new.onnx")
-    redef_onnx_node_4_trt_plugin_1(path_onnx_model_1, path_onnx_model_new_1)  # redefine the trt plugin nodes
+#     path_onnx_model_new_1 = os.path.join(MODEL_REPO_DIR, MODEL_NAME + "_1_new.onnx")
+#    redef_onnx_node_4_trt_plugin_1(path_onnx_model_1, path_onnx_model_new_1)  # redefine the trt plugin nodes
     # path_onnx_model = path_onnx_model_new
     # onnx.save_model(onnx_model_proto_new, path_onnx_model_new)
 
