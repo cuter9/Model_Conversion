@@ -1,10 +1,10 @@
+# This is for graph resurgence of TF model conversion of TF version 2.X
 import os
 import subprocess
 import tensorflow as tf
 import graphsurgeon as gs
-from tensorflow.python.framework import function_def_to_graph as f2g
+# from tensorflow.python.framework import function_def_to_graph as f2g
 from Utils.ssd_utils_v2 import get_feature_map_shape, load_config
-from tf_onnx import load_customer_op
 from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
 
 def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
@@ -37,20 +37,28 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
     #    tf.summary.graph(graph_def_spc)
         tf.summary.graph(g_def)
 
-
+    # https://blog.tensorflow.org/2021/03/a-tour-of-savedmodel-signatures.html
+    # 1. In TF Version>2.0,model is excuted with "graph function" with specified "signature", rather than graph definition as in TF V1.X,
+    # 2. In TF Version>2.0, the concrete function using tf.function and wrapped with specified "signature" is used to model training and inference.
+    # 3. In TF Version>2.0, to speed up the inference, the signature concrete functions are excuted through StatefulPartitionedCall operation
+    #    with resources variables is used to fully leverage the devices for parallel computing.
+    # 4. Thus, before it can be converted to ONNX and TRT model, the StatefulPartitionedCall operation and
+    #    its control dependencies shall be removed, and
+    #    the related model resources variables for concrete function shall be "frozen to constant".
     # https://medium.com/@sebastingarcaacosta/how-to-export-a-tensorflow-2-x-keras-model-to-a-frozen-and-optimized-graph-39740846d9eb
-    g_frozen = convert_variables_to_constants_v2(g_sig)
+    g_frozen = convert_variables_to_constants_v2(g_sig)     # freeze resources variables to constant
     g_frozen_def = g_frozen.graph.as_graph_def()
-    static_graph = gs.StaticGraph(g_frozen_def)
+    # static_graph = gs.StaticGraph(g_frozen_def)
 
     for nd in g_frozen_def.node:
-        if nd.name.split('/')[0] == 'StatefulPartitionedCall':
+        if nd.name.split('/')[0] == 'StatefulPartitionedCall':  # remove the namespace used for 'StatefulPartitionedCall' operation
             nd.name = '/'.join(nd.name.split('/')[1:])
         for ndi in range(len(nd.input)):
-            if nd.input[ndi].split('/')[0] == 'StatefulPartitionedCall':
+            if nd.input[ndi].split('/')[0] == 'StatefulPartitionedCall':   # remove the namespace 'StatefulPartitionedCall' of node input name            \
                 nd.input[ndi] = '/'.join(nd.input[ndi].split('/')[1:])
         for ni in nd.input:
-            if ni.split('/')[0] == '^StatefulPartitionedCall':
+            # if ni.split('/')[0] == '^StatefulPartitionedCall':
+            if list(ni)[0] == '^':  # remove the control dependence input
                 nd.input.remove(ni)
 
     '''
@@ -71,7 +79,7 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
     '''
     '''
     g = g_serving.graph
-    g_def = g.as_graph_def()    
+    g_def = g.as_graph_def()
 
     g_def_lib_func = g_def.library.function
     static_graph = gs.StaticGraph(g_def)
@@ -228,7 +236,7 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
         # scoreConverter="SIGMOID",
         scoreBits=16,
         isBatchAgnostic=1,
-        codeType=3)
+        codeType=3)     # box CodeTypeSSD : TF_CENTER, https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-821/api/c_api/_nv_infer_plugin_utils_8h_source.html
 
     # tf built in op Concat is not suitable for onnx conversion,
     # thus use a custom op instead and replace later

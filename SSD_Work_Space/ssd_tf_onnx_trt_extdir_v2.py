@@ -1,3 +1,4 @@
+# This TF model conversion is for TF version 2.X
 import numpy as np
 import os
 import subprocess
@@ -66,14 +67,17 @@ def ssd_pipeline_to_onnx(checkpoint_path, config_path,
     #    tf_saved2frozen(config, checkpoint_path,
     #                    tmp_dir)  # export saved model to frozen graph, tmp_dir : frozen graph path
 
-    # load and process directly the tf saved model instated of temporary directory method above
-    path_tf_model = os.path.join(TF_MODEL_DIR, MODEL_NAME)
-    # surge TF model Graph for ONNX model conversion
-    input_name, output_name, path_tf_custom_op = tf_gs(path_tf_model = path_tf_model,
-                                    input_name=TRT_INPUT_NAME, output_name=TRT_OUTPUT_NAME,
-                                    onnx_work_dir=ONNX_WORK_SPACE, path_graph_pb=path_graph_pb, path_tf_custom_op=TF_CUSTOM_OP)
+    # load and process the tf saved model directly instated of storing the (frozen) pb model  file in temporary directory method as above
+    # surge the TF model Graph for ONNX model conversion
+    path_tf_model = os.path.join(TF_MODEL_DIR, MODEL_NAME)  # the tensorflow model downloaded from TF 2.0 model zoo
 
-    # ##load custom ops need for conversion from tf model to onnx model when parsing with tf backend
+    input_name, output_name, path_tf_custom_op = tf_gs(path_tf_model = path_tf_model,
+                                                       input_name=TRT_INPUT_NAME, output_name=TRT_OUTPUT_NAME,
+                                                       onnx_work_dir=ONNX_WORK_SPACE,
+                                                       path_graph_pb=path_graph_pb, # the path stores the model graph def pb file
+                                                       path_tf_custom_op=TF_CUSTOM_OP)  # the path stores the TF custom op for TF to ONNX model graph conversion
+
+    # load custom ops need for conversion from tf model to onnx model when "parsing with tf backend" is needed
     # the custom ops can be constructed by the makefile in dir /tensorflow_trt_op
     load_customer_op(path_tf_custom_op)
 

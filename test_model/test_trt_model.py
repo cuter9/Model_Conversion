@@ -13,6 +13,8 @@ from utils.display import open_window, set_display, show_fps
 from utils.visualization import BBoxVisualization
 
 # test SSD model with cuda through pycuda.driver
+# install pycuda : https://pypi.org/project/pycuda/2024.1/#description
+# sudo python3 setup.py bdist_wheel; sudo pip3 install pycuda-2024.1-cp38-cp38-linux_aarch64.whl
 WORK = os.getcwd()
 
 DATA_REPO_DIR = os.path.join(os.environ["HOME"], "Data_Repo/Model_Conversion/SSD_mobilenet")
@@ -32,8 +34,7 @@ PATH_TRT_MODEL_from_ONNX = os.path.join(DATA_REPO_DIR, "ONNX_Model/Repo", engine
 PATH_TRT_MODEL_from_UFF = os.path.join(DATA_REPO_DIR, "UFF_Model/Repo/", engine_name)
 
 WINDOW_NAME = 'TrtSsdModelTest'
-INPUT_HW = (300, 300)
-
+INPUT_HW = (300, 300)   # "ssd_mobilenet_v2_coco.engine"
 
 def verify_trt_model(path_model, model_type):
     test_img = os.path.join(TEST_DIR, "test.jpg")
@@ -54,7 +55,8 @@ def verify_trt_model(path_model, model_type):
 
     vis = BBoxVisualization(cls_dict)
     test_op = False
-    boxes, confs, clss = trt_ssd.detect(img_handle, model_type, test_op, conf_th=0.3)
+    # boxes: [[x_min_object_box, y_min_object_box, x_max_object_box, y_max_object_box], []] for draw
+    boxes, confs, clss = trt_ssd.detect(img_handle, model_type, test_op, conf_th=0.5)
     img_handle = vis.draw_bboxes(img_handle, boxes, confs, clss)
     cv2.imshow(WINDOW_NAME, img_handle)
     while True:

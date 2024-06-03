@@ -1,3 +1,4 @@
+# This TF model conversion is for TF version 1.X
 import numpy as np
 import os
 import subprocess

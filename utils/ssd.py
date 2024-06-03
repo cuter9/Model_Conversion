@@ -35,6 +35,11 @@ def _postprocess_trt(img, output, conf_th, output_layout=7):
     """Postprocess TRT SSD output."""
     img_h, img_w, _ = img.shape
     boxes, confs, clss = [], [], []
+    # # box CodeTypeSSD : TF_CENTER, https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-821/api/c_api/_nv_infer_plugin_utils_8h_source.html
+    # output :  [ ,class ID, confidence score, x_min_object_box, y_min_object_box, x_max_object_box, y_max_object_box,
+    #             , ....
+    #             ,class ID, confidence score, x_min_object_box, y_min_object_box, x_max_object_box, y_max_object_box,
+    #             , ....]
     for prefix in range(0, len(output), output_layout):
         if not output[1] < 0:
             print("---- one detection ---- \n ", output[prefix: prefix + output_layout])
