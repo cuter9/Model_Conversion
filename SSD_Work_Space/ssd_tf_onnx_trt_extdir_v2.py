@@ -22,7 +22,7 @@ FROZEN_GRAPH_NAME = 'saved_model.pb'        # for TF v2
 # MODEL_NAME = "ssd_mobilenet_v1_coco_2018_01_28"
 # MODEL_NAME = "ssd_mobilenet_v2_coco_2018_03_29"     # tf v1 model
 MODEL_NAME = "ssd_mobilenet_v2_320x320_coco17_tpu-8"
-MODEL_TRT = "ssd_mobilenet_v2_coco_tf_v2"
+MODEL_TRT = "ssd_mobilenet_v2_320x320_coco17_tpu-8_tf_v2"
 
 WORK = os.getcwd()
 
@@ -156,7 +156,7 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
     onnx_graph = gs_onnx.import_onnx(onnx_model_proto)
 
     nodes_reshape_conf = [nd for nd in onnx_graph.nodes
-                          if nd.op == "Reshape" and nd.name.split("/", 1)[1] == "Reshape_1"]
+                          if nd.op == "Reshape" and nd.name.split("/", 1)[1].split('_')[0] == "ConvolutionalClassHead"]
     for nd in nodes_reshape_conf:
         nd.inputs[1].values = np.array([1, -1, 1, 91])
 

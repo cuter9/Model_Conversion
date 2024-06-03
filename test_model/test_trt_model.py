@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 import wget
 import matplotlib.pyplot as plt
@@ -14,14 +15,21 @@ from utils.visualization import BBoxVisualization
 # test SSD model with cuda through pycuda.driver
 WORK = os.getcwd()
 
-DATA_REPO_DIR = os.path.join("../../", "Data_Repo/Model_Conversion/SSD_mobilenet")
+DATA_REPO_DIR = os.path.join(os.environ["HOME"], "Data_Repo/Model_Conversion/SSD_mobilenet")
 TEST_DIR = os.path.join(DATA_REPO_DIR, "Test Data")
-os.makedirs(TEST_DIR, exist_ok=True)
+
+if os.path.isdir(TEST_DIR):
+    subprocess.call(['rm', '-r', TEST_DIR])
+subprocess.call(['mkdir', '-p', TEST_DIR])
+
+# os.makedirs(TEST_DIR, exist_ok=True)
 
 # PATH_TRT_MODEL_from_ONNX = "/home/cuterbot/Model_Conversion/SSD_Work_Space/ONNX_Model/Repo/ssd_mobilenet_v2_coco.engine"
 # PATH_TRT_MODEL_from_UFF = "/home/cuterbot/Model_Conversion/SSD_Work_Space/UFF_Model/Repo/ssd_mobilenet_v2_coco.engine"
-PATH_TRT_MODEL_from_ONNX = os.path.join(DATA_REPO_DIR, "ONNX_Model/Repo/ssd_mobilenet_v2_coco.engine")
-PATH_TRT_MODEL_from_UFF = os.path.join(DATA_REPO_DIR, "UFF_Model/Repo/ssd_mobilenet_v2_coco.engine")
+engine_name = "ssd_mobilenet_v2_coco.engine"
+engine_name = "ssd_mobilenet_v2_320x320_coco17_tpu-8_tf_v2.engine"
+PATH_TRT_MODEL_from_ONNX = os.path.join(DATA_REPO_DIR, "ONNX_Model/Repo", engine_name)
+PATH_TRT_MODEL_from_UFF = os.path.join(DATA_REPO_DIR, "UFF_Model/Repo/", engine_name)
 
 WINDOW_NAME = 'TrtSsdModelTest'
 INPUT_HW = (300, 300)
