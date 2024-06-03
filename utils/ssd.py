@@ -127,7 +127,8 @@ class TrtSSD(object):
             if self.cuda_ctx:
                 self.cuda_ctx.pop()
 
-        atexit.register(self.destroy)
+        atexit.register(self.destroy) # the destroy function is depreciated
+
 
     def __del__(self):
         """Free CUDA memories and context."""
@@ -197,7 +198,10 @@ class TrtSSD(object):
             return _postprocess_trt(img, output, conf_th)
 
     def destroy(self):
-        self.runtime.destroy()
-        self.trt_logger.destroy()
-        self.engine.destroy()
-        self.context.destroy()
+        # self.runtime.destroy() # this function is depreciated
+        # self.trt_logger.destroy()
+        # self.engine.destroy()
+        # self.context.destroy()
+        del self.runtime
+        del self.engine
+        del self.context
