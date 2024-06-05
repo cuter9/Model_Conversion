@@ -22,14 +22,19 @@ FROZEN_GRAPH_NAME = 'saved_model.pb'        # for TF v2
 
 # MODEL_NAME = "ssd_mobilenet_v1_coco_2018_01_28"
 # MODEL_NAME = "ssd_mobilenet_v2_coco_2018_03_29"     # tf v1 model
+
 # Object Detection Model in TF V2 Model Zoo : https://github.com/tensorflow/models/tree/master/research/object_detection
-MODEL_NAME = "ssd_mobilenet_v2_320x320_coco17_tpu-8"
-MODEL_TRT = "ssd_mobilenet_v2_320x320_coco17_tpu-8_tf_v2"
+# MODEL_NAME = "ssd_mobilenet_v2_320x320_coco17_tpu-8"
+MODEL_NAME = "ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8"
+
+# MODEL_TRT = "ssd_mobilenet_v2_320x320_coco17_tpu-8_tf_v2"
+MODEL_TRT = "ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8_tf_v2"
 
 WORK = os.getcwd()
 
-# DATA_REPO_DIR = os.path.join("../../", "Data_Repo/Model_Conversion//SSD_mobilenet")
-DATA_REPO_DIR = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion//SSD_mobilenet")
+# DATA_REPO_DIR = os.path.join("../../", "Data_Repo/Model_Conversion/SSD_mobilenet")
+# DATA_REPO_DIR = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion/SSD_mobilenet")
+DATA_REPO_DIR = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion/SSD_mobilenet_FPN")
 os.makedirs(DATA_REPO_DIR, exist_ok=True)
 
 ONNX_WORK_SPACE = os.path.join(DATA_REPO_DIR, "ONNX_Model")

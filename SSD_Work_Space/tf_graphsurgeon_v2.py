@@ -229,14 +229,14 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
         nmsThreshold=nms_config.iou_threshold,
         topK=nms_config.max_detections_per_class,
         keepTopK=nms_config.max_total_detections,
-        numClasses=config.model.ssd.num_classes + 1,  # add background
+        numClasses=config.model.ssd.num_classes + 1,  # add background class
         inputOrder=[1, 2, 0],  # [1, 2, 0]
         confSigmoid=1,
         isNormalized=1,
         # scoreConverter="SIGMOID",
         scoreBits=16,
         isBatchAgnostic=1,
-        codeType=3)     # box CodeTypeSSD : TF_CENTER, https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-821/api/c_api/_nv_infer_plugin_utils_8h_source.html
+        codeType=3)     # box CodeTypeSSD : 3 = TF_CENTER, https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-821/api/c_api/_nv_infer_plugin_utils_8h_source.html
 
     # tf built in op Concat is not suitable for onnx conversion,
     # thus use a custom op instead and replace later
