@@ -57,10 +57,13 @@ def get_keypoint_tuples(eval_config):
 # @title Choose the model to use, then evaluate the cell.
 MODELS = {'ssd_mobilenet_2': 'ssd_mobilenet_v2_320x320_coco17_tpu-8',
           'ssd_mobilenet_1': 'ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8',
-          'ssd_resnet_50': 'ssd_resnet50_v1_fpn_1024x1024_coco17_tpu-8',
+          'ssd_mobilenet_3': 'ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8',
+          'ssd_mobilenet_4': 'ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8',
+          'ssd_resnet_50': 'ssd_resnet50_v1_fpn_640x640_coco17_tpu-8',
+          'ssd_resnet_101': 'ssd_resnet101_v1_fpn_640x640_coco17_tpu-8',
           'centernet_without_keypoints': 'centernet_hg104_512x512_coco17_tpu-8'}
 
-model_display_name = 'ssd_mobilenet_2'  # @param
+model_display_name = 'ssd_mobilenet_4'  # @param
 model_name = MODELS[model_display_name]
 DATA_REPO_DIR = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion/test_tf_model")
 
@@ -159,15 +162,16 @@ def main():
         detections['detection_scores'][0].numpy(),
         category_index,
         use_normalized_coordinates=True,
-        max_boxes_to_draw=200,
+        max_boxes_to_draw=30,
         min_score_thresh=.50,
-        agnostic_mode=False)
+        agnostic_mode=False,
+        line_thickness=2)
         # keypoints=keypoints,
         # keypoint_scores=keypoint_scores,
         # keypoint_edges=get_keypoint_tuples(configs['eval_config']))
 
     matplotlib.use('TkAgg')
-    plt.figure(figsize=(12, 16))
+    plt.figure(figsize=(14, 18))
     plt.imshow(image_np_with_detections)
     plt.show()
 
