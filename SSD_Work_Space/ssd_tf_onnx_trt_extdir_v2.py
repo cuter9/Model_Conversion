@@ -28,7 +28,8 @@ FROZEN_GRAPH_NAME = 'saved_model.pb'        # for TF v2
 MODEL_NAME = "ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8"
 
 # MODEL_TRT = "ssd_mobilenet_v2_320x320_coco17_tpu-8_tf_v2"
-MODEL_TRT = "ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8_tf_v2"
+# MODEL_TRT = "ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8_tf_v2"
+MODEL_TRT = "ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8"
 
 WORK = os.getcwd()
 
@@ -85,6 +86,8 @@ def ssd_pipeline_to_onnx(checkpoint_path, config_path,
 
     # load custom ops need for conversion from tf model to onnx model when "parsing with tf backend" is needed
     # the custom ops can be constructed by the makefile in dir /tensorflow_trt_op
+    # ref: https://www.tensorflow.org/guide/create_op
+
     load_customer_op(path_tf_custom_op)
 
     print('---- start onnx conversion with surged tf model ----')

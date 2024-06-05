@@ -18,6 +18,7 @@ def download_model(model_name, model_dir):
     #           https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/install.html#downloading-the-tensorflow-model-garden
 #    download_base = 'http://download.tensorflow.org/models/object_detection/'      # base of tf v1 models
     download_base = 'http://download.tensorflow.org/models/object_detection/tf2/20200711/'
+    # download_base = 'http://download.tensorflow.org/models/object_detection/tf2/20210210/'  # only for downloading model centernet_mobilenetv2fpn_512x512_coco17_od
     # ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8.tar.gz
     # ssd_mobilenet_v2_320x320_coco17_tpu-8.tar.gz
     model_file_path = os.path.join(model_dir, model_file)

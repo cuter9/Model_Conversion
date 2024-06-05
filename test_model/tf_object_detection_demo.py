@@ -1,3 +1,5 @@
+# This code is in reference to https://github.com/tensorflow/models/blob/master/research/object_detection/colab_tutorials/inference_tf2_colab.ipynb
+
 import matplotlib
 import matplotlib.pyplot as plt
 
@@ -55,13 +57,16 @@ def get_keypoint_tuples(eval_config):
 
 # Download the checkpoint and put it into models/research/object_detection/test_data/
 # @title Choose the model to use, then evaluate the cell.
-MODELS = {'ssd_mobilenet_2': 'ssd_mobilenet_v2_320x320_coco17_tpu-8',
-          'ssd_mobilenet_1': 'ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8',
-          'ssd_mobilenet_3': 'ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8',
-          'ssd_mobilenet_4': 'ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8',
+MODELS = {'ssd_mobilenet_2': 'ssd_mobilenet_v2_320x320_coco17_tpu-8',       # good with some mis-identified
+          'ssd_mobilenet_1': 'ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8',               # better than ssd_mobilenet_4
+          'ssd_mobilenet_3': 'ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8',           # fare good
+          'ssd_mobilenet_4': 'ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8',           # good but worse than ssd_mobilenet_1 may because this is lite version
           'ssd_resnet_50': 'ssd_resnet50_v1_fpn_640x640_coco17_tpu-8',
           'ssd_resnet_101': 'ssd_resnet101_v1_fpn_640x640_coco17_tpu-8',
-          'centernet_without_keypoints': 'centernet_hg104_512x512_coco17_tpu-8'}
+          'centernet_without_keypoints': 'centernet_hg104_512x512_coco17_tpu-8',        # good
+          'centernet_resnet50_v2': 'centernet_resnet50_v2_512x512_coco17_tpu-8',        # worst
+          'centernet_mobilenet_v2': 'centernet_mobilenetv2fpn_512x512_coco17_od'}       # very worts
+
 
 model_display_name = 'ssd_mobilenet_4'  # @param
 model_name = MODELS[model_display_name]
@@ -85,6 +90,10 @@ download_model(model_name, TF_MODEL_DIR)
 # pipeline_config = os.path.join(DIR_TF_OBJECT_DETECTION, 'configs/tf2/', 'centernet_hourglass104_512x512_kpts_coco17_tpu-32.config')
 pipeline_config = os.path.join(TF_MODEL_DIR, model_name, 'pipeline.config')
 model_dir = os.path.join(TF_MODEL_DIR, model_name, 'checkpoint')
+# pipeline_config = os.path.join(TF_MODEL_DIR, 'centernet_mobilenetv2_fpn_od', 'pipeline.config')     # only for centernet_mobilenetv2_fpn_od
+# model_dir = os.path.join(TF_MODEL_DIR, 'centernet_mobilenetv2_fpn_od', 'checkpoint')
+
+
 
 # Load pipeline config and build a detection model
 configs = config_util.get_configs_from_pipeline_file(pipeline_config)
@@ -96,6 +105,7 @@ detection_model = model_builder.build(
 ckpt = tf.compat.v2.train.Checkpoint(
       model=detection_model)
 ckpt.restore(os.path.join(model_dir, 'ckpt-0')).expect_partial()
+# ckpt.restore(os.path.join(model_dir, 'ckpt-301')).expect_partial()
 
 def get_model_detection_function(model):
   """Get a tf.function for detection."""

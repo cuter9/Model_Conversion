@@ -132,13 +132,17 @@ def convtf2onnx(path_graph_pb, path_onnx_model, path_onnx_model_1, input_name, o
 
 
 def load_customer_op(op_path):
-    # load the custom op used in trt and must be parsed by tf conversion tools
-    # while converting tf model to trt model through onnx model
-    # dir_path_op = './"tensorflow_trt_op/python3/ops/set'  # the directory stored the custom op library
-    # dir_path_op_1 = 'tensorflow_trt_op/python3/ops/set'
-    # dir_path_op = "./" + op_path  # the directory stored the custom op library
-    # dir_path_op_1 = op_path
-    # ops_list = os.listdir(dir_path_op)
+    # 1. load the custom op used in trt and must be parsed by tf conversion tools
+    # 2. to use tf.load_op_library, pls ensure the liberary "libtensorflow_framework.so.2" is in the installed dist_package of tensorflow
+    #    and link it to the /usr/lib/aarch64-linux-gnu/libtensorflow_framework.so.* (*: 1 , 2 or none)
+    '''
+    while converting tf model to trt model through onnx model
+    dir_path_op = './"tensorflow_trt_op/python3/ops/set'  # the directory stored the custom op library
+    dir_path_op_1 = 'tensorflow_trt_op/python3/ops/set'
+    dir_path_op = "./" + op_path  # the directory stored the custom op library
+    dir_path_op_1 = op_path
+    ops_list = os.listdir(dir_path_op)
+    '''
     ops_list = os.listdir(op_path)
     print("the custom ops list to be loaded for tf parsing --- ", ops_list)
     tf_op = []
