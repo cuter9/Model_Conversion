@@ -53,7 +53,8 @@ os.makedirs(TF_MODEL_DIR, exist_ok=True)
 TMP_MODEL = os.path.join(TF_MODEL_DIR, "Exported_Model", "saved_model")     # for TF v2
 os.makedirs(TMP_MODEL, exist_ok=True)
 
-TF_CUSTOM_OP = "tensorflow_trt_op/python3/ops/set"  # the path stores the trt custom op for tf parsing
+# TF_CUSTOM_OP = os.path.join(WORK, "tensorflow_trt_op/python3/ops/set")  # the path stores the trt custom op for tf parsing
+TF_CUSTOM_OP = os.path.join(WORK, "tensorflow_trt_op/python3/ops_fpn/set")  # the path stores the trt custom op for tf parsing
 
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 os.environ['MODEL_NAME'] = MODEL_NAME

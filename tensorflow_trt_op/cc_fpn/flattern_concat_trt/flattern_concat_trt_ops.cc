@@ -16,5 +16,4 @@ REGISTER_OP("FlattenConcat_TRT")
     .Input("input_3: dtype")
     .Input("input_4: dtype")
     .Input("input_5: dtype")
-    .Input("input_6: dtype")
     .Output("output: dtype");

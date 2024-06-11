@@ -1,9 +1,9 @@
 CXX := g++
 NVCC := nvcc
 PYTHON_BIN_PATH = python3
-# DIR_SOURCE = ~/Model_Conversion/tensorflow_trt_op/cc_plugin
-DIR_SOURCE = ~/Model_Conversion/tensorflow_trt_op/cc
-DIR_OPLIB = ~/Model_Conversion/tensorflow_trt_op/python3/ops/set
+
+DIR_SOURCE = ~/Model_Conversion/tensorflow_trt_op/cc_fpn
+DIR_OPLIB = ~/Model_Conversion/tensorflow_trt_op/python3/ops_fpn/set
 
 GRID_ANCHOR_TRT_SRCS = $(wildcard $(DIR_SOURCE)/grid_ancjor_trt/*.cc)
 FLATTERN_CONCAT_TRT_SRCS = $(wildcard $(DIR_SOURCE)/flattern_concat_trt/*.cc)
