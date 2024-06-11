@@ -377,13 +377,6 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     namespace_plugin_map = {
 #        "MultiscaleGridAnchorGenerator": priorbox_concat_plugin,
         "Postprocessor": nms_plugin,
-#        "Identity_1": output_plugin,
-#        "Identity_2": output_plugin,
-#        "Identity_3": output_plugin,
-#        "Identity_4": output_plugin,
-#        "Identity_5": output_plugin,
-#        "Identity_6": output_plugin,
-#        "Identity_7": output_plugin,
         "Preprocessor": input_plugin,
         "Cast": input_plugin,
         "input_tensor": input_plugin,
