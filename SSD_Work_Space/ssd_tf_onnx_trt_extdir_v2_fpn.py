@@ -170,6 +170,7 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
     onnx_model_proto = onnx.load(path_onnx_model, format='protobuf')
     onnx_graph = gs_onnx.import_onnx(onnx_model_proto)
 
+    '''
     nodes_reshape_conf = [nd for nd in onnx_graph.nodes
                           if nd.op == "Reshape" and nd.name.split("/", 1)[1].split('_')[0] == "ConvolutionalClassHead"]
     for nd in nodes_reshape_conf:
@@ -208,16 +209,31 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
     # node_reshape_boxloc_5 = [nd for nd in onnx_graph.nodes if nd.name == "BoxPredictor_5/Reshape"][0]
     node_reshape_boxloc_5 = [nd for nd in onnx_graph.nodes if nd.name == "BoxPredictor/ConvolutionalBoxHead_5/Reshape"][0]
     node_reshape_boxloc_5.inputs[0] = node_boxloc_5_trnsp.outputs[0]
+    '''
+    # node_GridAnchor_TRT_0, add dummy input
+    node_GridAnchor_TRT_0 = [nd for nd in onnx_graph.nodes if nd.name == "priorbox_0"][0]
+    input_GridAnchor_TRT_0 = gs_onnx.Constant(name="priorbox_0_in:", values=np.ones(1))
+    node_GridAnchor_TRT_0.inputs = [input_GridAnchor_TRT_0]
 
-    # node_GridAnchor_TRT, add dummy input
-    node_GridAnchor_TRT = [nd for nd in onnx_graph.nodes if nd.name == "priorbox"][0]
-    input_GridAnchor_TRT = gs_onnx.Constant(name="priorbox_in:", values=np.ones(1))
-    node_GridAnchor_TRT.inputs = [input_GridAnchor_TRT]
+    # node_GridAnchor_TRT_1, add dummy input
+    node_GridAnchor_TRT_1 = [nd for nd in onnx_graph.nodes if nd.name == "priorbox_1"][0]
+    input_GridAnchor_TRT_1 = gs_onnx.Constant(name="priorbox_1_in:", values=np.ones(1))
+    node_GridAnchor_TRT_1.inputs = [input_GridAnchor_TRT_1]
+
+    node_priorbox_concat_0 = [nd for nd in onnx_graph.nodes if nd.name == "priorbox_concat_0"][0]
+    node_priorbox_concat_0.op = "Concat"
+    node_priorbox_concat_0.inputs = node_GridAnchor_TRT_0.outputs
+    node_priorbox_concat_0.outputs[0].dtype = np.float32
+
+    node_priorbox_concat_1 = [nd for nd in onnx_graph.nodes if nd.name == "priorbox_concat_1"][0]
+    node_priorbox_concat_1.op = "Concat"
+    node_priorbox_concat_1.inputs = node_GridAnchor_TRT_1.outputs
+    node_priorbox_concat_1.outputs[0].dtype = np.float32
 
     # node_priorbox_concat, modify op name and add explicitly the inputs from node_GridAnchor_TRT
     node_priorbox_concat = [nd for nd in onnx_graph.nodes if nd.name == "priorbox_concat"][0]
     node_priorbox_concat.op = "Concat"
-    node_priorbox_concat.inputs = node_GridAnchor_TRT.outputs
+    node_priorbox_concat.inputs = [node_priorbox_concat_0.outputs, node_priorbox_concat_1.output]
     node_priorbox_concat.outputs[0].dtype = np.float32
 
     node_boxconf_concat = [nd for nd in onnx_graph.nodes if nd.name == "boxconf_concat"][0]

@@ -69,7 +69,7 @@ def convtf2onnx_by_python():
 
 def convtf2onnx(path_graph_pb, path_onnx_model, path_onnx_model_1, input_name, output_name):
     # ref : https://blog.nowcoder.net/n/73d6765be1bc420589cd7bdb9495c796?from=nowcoder_improve
-    from tensorflow.compat.v1 import gfile
+    # from tensorflow.compat.v1 import gfile
 
     # 2 methods can be used for tf to onnx model conversion
     # This function is used for convert tf model to onnx model with customer op,

@@ -52,16 +52,27 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     g_frozen_def = g_frozen.graph.as_graph_def()
     # static_graph = gs.StaticGraph(g_frozen_def)
 
+    tmp_tbdir_s_1 = os.path.join(onnx_work_dir, "tf_board_data_s_1")  # for storing static graph after frozen
+    if os.path.isdir(tmp_tbdir_s_1):
+        subprocess.call(['rm', '-r', tmp_tbdir_s_1])
+    subprocess.call(['mkdir', '-p', tmp_tbdir_s_1])
+
+    writer_s = tf.summary.create_file_writer(tmp_tbdir_s_1)
+    with writer_s.as_default():
+    #    tf.summary.graph(graph_def_spc)
+        tf.summary.graph(g_frozen_def)
+
     for nd in g_frozen_def.node:
         if nd.name.split('/')[0] == 'StatefulPartitionedCall':  # remove the namespace used for 'StatefulPartitionedCall' operation
             nd.name = '/'.join(nd.name.split('/')[1:])
         for ndi in range(len(nd.input)):
             if nd.input[ndi].split('/')[0] == 'StatefulPartitionedCall':   # remove the namespace 'StatefulPartitionedCall' of node input name            \
                 nd.input[ndi] = '/'.join(nd.input[ndi].split('/')[1:])
-        for ni in nd.input:
+        ni = list(nd.input)
+        for n in ni:
             # if ni.split('/')[0] == '^StatefulPartitionedCall':
-            if list(ni)[0] == '^':  # remove the control dependence input
-                nd.input.remove(ni)
+            if list(n)[0] == '^':  # remove the control dependence input (which has "^" in the name string)
+                nd.input.remove(n)
 
     '''
     s = []
@@ -168,8 +179,8 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     all_noop_nodes = dynamic_graph.find_nodes_by_op("NoOp")
     dynamic_graph.remove(all_noop_nodes, remove_exclusive_dependencies=False)
 
-    all_assert_nodes = dynamic_graph.find_nodes_by_op("Assert")
-    dynamic_graph.remove(all_assert_nodes, remove_exclusive_dependencies=False)
+    # all_assert_nodes = dynamic_graph.find_nodes_by_op("Assert")
+    # dynamic_graph.remove(all_assert_nodes, remove_exclusive_dependencies=False)
 
 
     # remove the reshape operation for original predict box and class
@@ -177,17 +188,20 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     all_reshape_nodes = []
     for key, node in node_map.items():
         if 'WeightSharedConvolutionalBoxHead' in key.split('/') and node.op == "Reshape":
-            for ni in range(len(node.input)):
-                if node.input[ni] == '/'.join([key, 'shape']):
-                    node.input.remove(node.input[ni])
+            ni = list(node.input)
+            for n in ni:
+                if n == '/'.join([key, 'shape']):
+                    node.input.remove(n)        # remove the input
+                    dynamic_graph.remove(dynamic_graph.find_nodes_by_path(n))   # remove the node of input
             all_reshape_nodes.append(node)
         if 'WeightSharedConvolutionalClassHead' in key.split('/') and node.op == "Reshape" :
-            for ni in range(len(node.input)):
-                if node.input[ni] == '/'.join([key, 'shape']):
-                    node.input.remove(node.input[ni])
+            ni = list(node.input)
+            for n in ni:
+                if n == '/'.join([key, 'shape']):
+                    node.input.remove(n)        # remove the input
+                    dynamic_graph.remove(dynamic_graph.find_nodes_by_path(n))       # remove the node of input
             all_reshape_nodes.append(node)
     dynamic_graph.forward_inputs(all_reshape_nodes)
-    # dynamic_graph.remove(dynamic_graph.find_nodes_by_path(all_reshape_nodes_path), remove_exclusive_dependencies=False)
 
     tmp_tbdir_d_0 = os.path.join(onnx_work_dir, "tf_board_data_d_0")  # for storing dynamic graph before insert TRT plugins
     if os.path.isdir(tmp_tbdir_d_0):
@@ -237,6 +251,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     aspect_ratios = list(anchor_generator_config.aspect_ratios)[1:]     # ignor aspect_ratios = 1 which will be auto gen by TRT
     feature_map_shapes = get_feature_map_shape_fpn(config)
 
+    # create GridAnchor for scale 0 of each octave
     priorbox_plugin_0 = gs.create_node(
         name="priorbox_0",
         op="GridAnchor_TRT",
@@ -257,6 +272,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         numLayers=num_layers)
 #        numLayers = config.model.ssd.anchor_generator.ssd_anchor_generator.num_layers)
 
+    # create GridAnchor for scale 1 of each octave
     priorbox_plugin_1 = gs.create_node(
         name="priorbox_1",
         op="GridAnchor_TRT",
@@ -302,6 +318,8 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         codeType=1)     # box CodeTypeSSD : 1 = CORNER, https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-821/api/c_api/_nv_infer_plugin_utils_8h_source.html
         # codeType = 3)  # box CodeTypeSSD : 3 = TF_CENTER, https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-821/api/c_api/_nv_infer_plugin_utils_8h_source.html
 
+    # dynamic_graph.append(nms_plugin)
+
     # tf built in op Concat is not suitable for onnx conversion,
     # thus use a custom op instead and replace later
     priorbox_concat_plugin = gs.create_node(
@@ -340,6 +358,8 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         ignoreBatch=0
     )
 
+    nms_plugin.input.extend(["boxloc_concat", "boxconf_concat", "priorbox_concat"])
+
     # create output plugin
     output_plugin = gs.create_node(
         name="output",
@@ -348,19 +368,22 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         # dtype=tf.uint8,
         shape=[1, 1, nms_config.max_total_detections, 7])
 
-    dynamic_graph.append(output_plugin)
+    # output_plugin.input.extend([output_name])
+
+    # dynamic_graph.append(output_plugin)
 
     # transform (map) tf namespace to trt namespace --> tf namespace : trt namespace
+    # the collapse_namespaces method will append a new node, thus append the node will duplicate
     namespace_plugin_map = {
 #        "MultiscaleGridAnchorGenerator": priorbox_concat_plugin,
         "Postprocessor": nms_plugin,
-        "Identity_1": output_plugin,
-        "Identity_2": output_plugin,
-        "Identity_3": output_plugin,
-        "Identity_4": output_plugin,
-        "Identity_5": output_plugin,
-        "Identity_6": output_plugin,
-        "Identity_7": output_plugin,
+#        "Identity_1": output_plugin,
+#        "Identity_2": output_plugin,
+#        "Identity_3": output_plugin,
+#        "Identity_4": output_plugin,
+#        "Identity_5": output_plugin,
+#        "Identity_6": output_plugin,
+#        "Identity_7": output_plugin,
         "Preprocessor": input_plugin,
         "Cast": input_plugin,
         "input_tensor": input_plugin,
@@ -376,9 +399,17 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     namespace_remove = {
         "Cast",
         "add",
+        "add/y"
         "Cast_1",
 #        "ToFloat",
         "Identity",
+        "Identity_1",
+        "Identity_2",
+        "Identity_3",
+        "Identity_4",
+        "Identity_5",
+        "Identity_6",
+        "Identity_7",
         "Preprocessor",
         "MultiscaleGridAnchorGenerator"
     }
@@ -411,6 +442,12 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     for key, node in node_map.items():
         if 'MultiscaleGridAnchorGenerator' in key.split('/'):
             nd_mgag.append(node)
+            if "strided" in key.split('/')[-1].split('_')[0]:   # remove the unknown_X const node in MultiscaleGridAnchorGenerator
+                ni = node.input
+                for n in ni:
+                    if n.split("_")[0] == "unknown":
+                        dynamic_graph.remove(dynamic_graph.find_nodes_by_name(n))
+
     dynamic_graph.remove(nd_mgag)
 
     dynamic_graph.remove(
