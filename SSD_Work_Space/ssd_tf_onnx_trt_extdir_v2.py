@@ -11,7 +11,8 @@ import onnx_graphsurgeon as gs_onnx
 from tf_onnx import convtf2onnx, load_customer_op
 from Utils.ssd_utils_v2 import load_config, tf_saved2frozen, get_feature_map_shape, download_model
 
-from tf_graphsurgeon_v2 import tf_graphsurgeon as tf_gs
+# from tf_graphsurgeon_v2 import tf_graphsurgeon as tf_gs
+from tf_graphsurgeon_v2_fpn import tf_ssd_fpn_graphsurgeon as tf_gs
 
 faulthandler.enable()
 

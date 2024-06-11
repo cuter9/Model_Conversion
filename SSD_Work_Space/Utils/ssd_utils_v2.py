@@ -58,6 +58,19 @@ def get_feature_map_shape(config):
     print("---- feature map size array : ", fms)
     return fms
 
+def get_feature_map_shape_fpn(config):
+    width = config.model.ssd.image_resizer.fixed_shape_resizer.width
+    min_level = config.model.ssd.anchor_generator.multiscale_anchor_generator.min_level    # 3
+    max_level = config.model.ssd.anchor_generator.multiscale_anchor_generator.max_level    # 7
+    fms = []
+
+    # curr = int(np.ceil(width / 4.0))
+    for i in range(min_level-1, max_level+1):     # from 2 to 8-1
+        curr = int(np.ceil(width / np.square(i)))
+        fms.append(curr)
+    print("---- feature map size array : ", fms)
+    return fms
+
 
 def load_config(config_path):
     from object_detection.protos.pipeline_pb2 import TrainEvalPipelineConfig
