@@ -223,26 +223,27 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     anchor_generator_config = config.model.ssd.anchor_generator.multiscale_anchor_generator
     box_coder_config = config.model.ssd.box_coder.faster_rcnn_box_coder
 
-    # anchor_scale = anchor_generator_config.anchor_scale
-    anchor_scale = 2
-    min_size = anchor_scale * 2**(anchor_generator_config.min_level - 1) / height  # add additional layer but ignor it in later operation
-    max_size = anchor_scale * 2**anchor_generator_config.max_level / height
-    num_layers = anchor_generator_config.max_level - anchor_generator_config.min_level + 2
+    num_layers = anchor_generator_config.max_level - anchor_generator_config.min_level + 1
 
+    anchor_scale = anchor_generator_config.anchor_scale
+    # anchor_scale = 2
     scales_per_octave = anchor_generator_config.scales_per_octave
-    ar = list(anchor_generator_config.aspect_ratios)
+    min_size_0 = anchor_scale * 2**anchor_generator_config.min_level / height  # add additional layer but ignor it in later operation
+    max_size_0 = anchor_scale * 2**anchor_generator_config.max_level / height
     spo = [(2 ** (float(scale) / scales_per_octave))**2 for scale in range(scales_per_octave)]
-    aspect_ratios = []
-    for s in spo:
-        aspect_ratios += [a * s for a in ar]
+    min_size = [min_size_0 * s  for s in spo]
+    max_size = [max_size_0 * s  for s in spo]
 
-    priorbox_plugin = gs.create_node(
-        name="priorbox",
+    aspect_ratios = list(anchor_generator_config.aspect_ratios)[1:]     # ignor aspect_ratios = 1 which will be auto gen by TRT
+    feature_map_shapes = get_feature_map_shape_fpn(config)
+
+    priorbox_plugin_0 = gs.create_node(
+        name="priorbox_0",
         op="GridAnchor_TRT",
 #        minSize=anchor_generator_config.min_scale,  # minSize
 #        maxSize=anchor_generator_config.max_scale,
-        minSize=min_size,  # minSize
-        maxSize=max_size,
+        minSize=min_size[0],  # minSize
+        maxSize=max_size[0],
 #        aspectRatios=list(anchor_generator_config.aspect_ratios),
         aspectRatios=aspect_ratios,
         variance=[
@@ -251,10 +252,32 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
             1.0 / box_coder_config.height_scale,
             1.0 / box_coder_config.width_scale
         ],
-        featureMapShapes=get_feature_map_shape_fpn(config),     #[80, 40, 20, 10, 5, 3]
+        featureMapShapes=feature_map_shapes,     #[80, 40, 20, 10, 5, 3]
         # featureMapShapes=[1, 2, 3, 5, 10, 19],
         numLayers=num_layers)
 #        numLayers = config.model.ssd.anchor_generator.ssd_anchor_generator.num_layers)
+
+    priorbox_plugin_1 = gs.create_node(
+        name="priorbox_1",
+        op="GridAnchor_TRT",
+        #        minSize=anchor_generator_config.min_scale,  # minSize
+        #        maxSize=anchor_generator_config.max_scale,
+        minSize=min_size[1],  # minSize with 2nd scales of octave
+        maxSize=max_size[1],
+        #        aspectRatios=list(anchor_generator_config.aspect_ratios),
+        aspectRatios=aspect_ratios,
+        variance=[
+            1.0 / box_coder_config.y_scale,
+            1.0 / box_coder_config.x_scale,
+            1.0 / box_coder_config.height_scale,
+            1.0 / box_coder_config.width_scale
+        ],
+        featureMapShapes=feature_map_shapes,  # [80, 40, 20, 10, 5, 3]
+        # featureMapShapes=[1, 2, 3, 5, 10, 19],
+        numLayers=num_layers)
+
+    dynamic_graph.append(priorbox_plugin_0)
+    dynamic_graph.append(priorbox_plugin_1)
 
     # create nms plugin
     nms_config = config.model.ssd.post_processing.batch_non_max_suppression
@@ -283,9 +306,23 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     # thus use a custom op instead and replace later
     priorbox_concat_plugin = gs.create_node(
         "priorbox_concat", op="Concat_TRT", dtype=tf.float32, axis=2)
+    priorbox_concat_plugin.input.extend(["priorbox_concat_0"])
+    priorbox_concat_plugin.input.extend(["priorbox_concat_1"])
 
-    squeeze_plugin = gs.create_node(
-        "squeeze", op="Squeeze_TRT", axis=2, inputs=["boxloc_concat"])
+    priorbox_concat_plugin_0 = gs.create_node(
+        "priorbox_concat_0", op="Concat_TRT", dtype=tf.float32, axis=2)
+    priorbox_concat_plugin_0.input.extend(["priorbox_0"])
+
+    priorbox_concat_plugin_1 = gs.create_node(
+        "priorbox_concat_1", op="Concat_TRT", dtype=tf.float32, axis=2)
+    priorbox_concat_plugin_1.input.extend(["priorbox_1"])
+
+    # squeeze_plugin = gs.create_node(
+    #    "squeeze", op="Squeeze_TRT", axis=2, inputs=["boxloc_concat"])
+
+    # dynamic_graph.append(priorbox_concat_plugin)
+    dynamic_graph.append(priorbox_concat_plugin_0)
+    dynamic_graph.append(priorbox_concat_plugin_1)
 
     boxloc_concat_plugin = gs.create_node(
         "boxloc_concat",
@@ -315,7 +352,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
 
     # transform (map) tf namespace to trt namespace --> tf namespace : trt namespace
     namespace_plugin_map = {
-        "MultiscaleGridAnchorGenerator": priorbox_plugin,
+#        "MultiscaleGridAnchorGenerator": priorbox_concat_plugin,
         "Postprocessor": nms_plugin,
         "Identity_1": output_plugin,
         "Identity_2": output_plugin,
@@ -329,7 +366,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         "input_tensor": input_plugin,
         "image_tensor": input_plugin,
         "Concatenate": priorbox_concat_plugin,
-        "Squeeze": squeeze_plugin,
+#        "Squeeze": squeeze_plugin,
         "concat": boxloc_concat_plugin,
         "concat_1": boxconf_concat_plugin
     }
@@ -340,9 +377,10 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         "Cast",
         "add",
         "Cast_1",
-        "ToFloat",
+#        "ToFloat",
         "Identity",
         "Preprocessor",
+        "MultiscaleGridAnchorGenerator"
     }
 
     dynamic_graph.remove(
@@ -357,12 +395,23 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
 
     # remove all inputs to the node GridAnchor_TRT which needs no input
     # for n in range(len(dynamic_graph.find_nodes_by_op('GridAnchor_TRT'))):
-    nd_priorbox = dynamic_graph.find_nodes_by_op('GridAnchor_TRT')[0]
-    # nd_priorbox.input.clear()
-    lst_input = list(nd_priorbox.input)
-    for ni in lst_input:
-        nd_priorbox.input.remove(ni)
+#    nd_priorbox = dynamic_graph.find_nodes_by_op('GridAnchor_TRT')[0]
+#    # nd_priorbox.input.clear()
+#    lst_input = list(nd_priorbox.input)
+#    for ni in lst_input:
+#        nd_priorbox.input.remove(ni)
 
+    nd_cant = dynamic_graph.find_nodes_by_name('priorbox_concat')[0]
+    nd_cand_input = list(nd_cant.input)
+    for n in nd_cand_input:
+        if "MultiscaleGridAnchorGenerator" in n.split("/"):
+            nd_cant.input.remove(n)
+
+    nd_mgag = []
+    for key, node in node_map.items():
+        if 'MultiscaleGridAnchorGenerator' in key.split('/'):
+            nd_mgag.append(node)
+    dynamic_graph.remove(nd_mgag)
 
     dynamic_graph.remove(
         dynamic_graph.graph_outputs, remove_exclusive_dependencies=False)

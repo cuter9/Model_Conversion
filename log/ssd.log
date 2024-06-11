@@ -1,4 +1,16 @@
+/home/cuterbot/Data_Repo/Model_Conversion/SSD_mobilenet_FPN/TF_Model/ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8 found. Proceed.
+---- start converting tf ssd to onnx model ----
+---- start graphsurgeon tf ssd for onnx model conversion----
+---- feature map size array :  [80, 36, 20, 13, 9, 7]
+---- the graphsurgeon tf ssd completed ---- 
+ ---- store the surged tf model to  /home/cuterbot/Data_Repo/Model_Conversion/SSD_mobilenet_FPN/ONNX_Model/Repo/ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8_4_onnx_conv.pb for onnx conversion ---- 
+
+---- start onnx conversion with surged tf model ----
 ^CTraceback (most recent call last):
-  File "/home/cuterbot/Model_Conversion/SSD_Work_Space/ssd_tf_onnx_trt_extdir_v2.py", line 58, in <module>
-    os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+  File "/home/cuterbot/Model_Conversion/SSD_Work_Space/ssd_tf_onnx_trt_extdir_v2.py", line 506, in <module>
+    ssd_pipeline_to_onnx(checkpoint_path, config_path,
+  File "/home/cuterbot/Model_Conversion/SSD_Work_Space/ssd_tf_onnx_trt_extdir_v2.py", line 83, in ssd_pipeline_to_onnx
+    input_name, output_name, path_tf_custom_op = tf_gs(path_tf_model = path_tf_model,
+  File "/home/cuterbot/Model_Conversion/SSD_Work_Space/tf_graphsurgeon_v2_fpn.py", line 465, in tf_ssd_fpn_graphsurgeon
+    return input_name, output_name, path_tf_custom_op
 KeyboardInterrupt
