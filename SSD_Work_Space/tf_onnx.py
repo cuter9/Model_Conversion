@@ -148,13 +148,13 @@ def load_customer_op(op_path):
     tf_op = []
     for ol in ops_list:
         print('--- load custom op library : ', os.path.join(op_path, ol))
-        try:
-            _ol = tf.load_op_library(os.path.join(op_path, ol))
-            tf_op.append(_ol)
+        # try:
+        _ol = tf.load_op_library(os.path.join(op_path, ol))
+        tf_op.append(_ol)
             # tf.load_op_library(os.path.join(dir_path_op, ol))
-        except:
-            _ol = tf.load_op_library(os.path.join(op_path, ol))
-            tf_op.append(ol)
+        # except:
+        #    _ol = tf.load_op_library(os.path.join(op_path, ol))
+        #    tf_op.append(ol)
             # tf.load_op_library(os.path.join(dir_path_op_1, ol))
     return tf_op
 

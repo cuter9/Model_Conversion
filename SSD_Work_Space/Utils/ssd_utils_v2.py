@@ -65,7 +65,7 @@ def get_feature_map_shape_fpn(config):
     fms = []
 
     # curr = int(np.ceil(width / 4.0))
-    for i in range(min_level-1, max_level+1):     # from 2 to 8-1
+    for i in range(min_level, max_level+1):     # from 3 to 7
         curr = int(np.ceil(width / np.square(i)))
         fms.append(curr)
     print("---- feature map size array : ", fms)

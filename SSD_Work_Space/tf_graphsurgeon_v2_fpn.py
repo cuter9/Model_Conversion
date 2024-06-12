@@ -181,19 +181,20 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
 
     # all_assert_nodes = dynamic_graph.find_nodes_by_op("Assert")
     # dynamic_graph.remove(all_assert_nodes, remove_exclusive_dependencies=False)
-
-
-    # remove the reshape operation for original predict box and class
     node_map = dynamic_graph.node_map
+    '''
+    # remove the reshape operation for original predict box and class
     all_reshape_nodes = []
     for key, node in node_map.items():
         if 'WeightSharedConvolutionalBoxHead' in key.split('/') and node.op == "Reshape":
             ni = list(node.input)
             for n in ni:
                 if n == '/'.join([key, 'shape']):
+                    node.input.remove(n)
                     node.input.remove(n)        # remove the input
                     dynamic_graph.remove(dynamic_graph.find_nodes_by_path(n))   # remove the node of input
             all_reshape_nodes.append(node)
+
         if 'WeightSharedConvolutionalClassHead' in key.split('/') and node.op == "Reshape" :
             ni = list(node.input)
             for n in ni:
@@ -201,7 +202,9 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
                     node.input.remove(n)        # remove the input
                     dynamic_graph.remove(dynamic_graph.find_nodes_by_path(n))       # remove the node of input
             all_reshape_nodes.append(node)
-    dynamic_graph.forward_inputs(all_reshape_nodes)
+    '''
+    # dynamic_graph.forward_inputs(all_reshape_nodes)
+
 
     tmp_tbdir_d_0 = os.path.join(onnx_work_dir, "tf_board_data_d_0")  # for storing dynamic graph before insert TRT plugins
     if os.path.isdir(tmp_tbdir_d_0):
@@ -308,8 +311,8 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         topK=nms_config.max_detections_per_class,
         keepTopK=nms_config.max_total_detections,
         numClasses=config.model.ssd.num_classes + 1,  # add background class
-#        inputOrder=[1, 2, 0],  # [1, 2, 0]
-        inputOrder=[0, 1, 2],  # [1, 2, 0]
+        inputOrder=[1, 2, 0],  # [1, 2, 0]
+        #        inputOrder=[0, 1, 2],  # [1, 2, 0]
         confSigmoid=1,
         isNormalized=1,
         # scoreConverter="SIGMOID",
@@ -323,16 +326,15 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     # tf built in op Concat is not suitable for onnx conversion,
     # thus use a custom op instead and replace later
     priorbox_concat_plugin = gs.create_node(
-        "priorbox_concat", op="Concat_TRT", dtype=tf.float32, axis=2)
-    priorbox_concat_plugin.input.extend(["priorbox_concat_0"])
-    priorbox_concat_plugin.input.extend(["priorbox_concat_1"])
+        "priorbox_concat", op="Concat_TRT", N=2, dtype=tf.float32, axis=2)
+    priorbox_concat_plugin.input.extend(["priorbox_concat_0", "priorbox_concat_1"])
 
     priorbox_concat_plugin_0 = gs.create_node(
-        "priorbox_concat_0", op="Concat_TRT", dtype=tf.float32, axis=2)
+        "priorbox_concat_0", op="Concat_TRT", N=1, dtype=tf.float32, axis=2)
     priorbox_concat_plugin_0.input.extend(["priorbox_0"])
 
     priorbox_concat_plugin_1 = gs.create_node(
-        "priorbox_concat_1", op="Concat_TRT", dtype=tf.float32, axis=2)
+        "priorbox_concat_1", op="Concat_TRT", N=1, dtype=tf.float32, axis=2)
     priorbox_concat_plugin_1.input.extend(["priorbox_1"])
 
     # squeeze_plugin = gs.create_node(
@@ -359,6 +361,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     )
 
     nms_plugin.input.extend(["boxloc_concat", "boxconf_concat", "priorbox_concat"])
+    # dynamic_graph.append(nms_plugin)
 
     # create output plugin
     output_plugin = gs.create_node(
@@ -369,7 +372,6 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         shape=[1, 1, nms_config.max_total_detections, 7])
 
     # output_plugin.input.extend([output_name])
-
     # dynamic_graph.append(output_plugin)
 
     # transform (map) tf namespace to trt namespace --> tf namespace : trt namespace
@@ -387,12 +389,12 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         "concat_1": boxconf_concat_plugin
     }
 
-    dynamic_graph.collapse_namespaces(namespace_plugin_map, exclude_nodes=[output_plugin])
+    dynamic_graph.collapse_namespaces(namespace_plugin_map)
 
     namespace_remove = {
         "Cast",
         "add",
-        "add/y"
+        "add/y",
         "Cast_1",
 #        "ToFloat",
         "Identity",
@@ -443,8 +445,9 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
 
     dynamic_graph.remove(nd_mgag)
 
-    dynamic_graph.remove(
-        dynamic_graph.graph_outputs, remove_exclusive_dependencies=False)
+    # dynamic_graph.remove(
+    #    dynamic_graph.graph_outputs, remove_exclusive_dependencies=False)
+
     '''
     nd_outputs = dynamic_graph.node_outputs
     for nd_name, nd in nd_outputs.items():
