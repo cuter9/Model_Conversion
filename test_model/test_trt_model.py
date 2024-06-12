@@ -31,7 +31,7 @@ subprocess.call(['mkdir', '-p', TEST_DIR])
 # PATH_TRT_MODEL_from_UFF = "/home/cuterbot/Model_Conversion/SSD_Work_Space/UFF_Model/Repo/ssd_mobilenet_v2_coco.engine"
 # engine_name = "ssd_mobilenet_v2_coco.engine"
 # engine_name = "ssd_mobilenet_v2_320x320_coco17_tpu-8_tf_v2.engine"
-#　PATH_TRT_MODEL_from_ONNX = os.path.join(DATA_REPO_DIR, "ONNX_Model/Repo", engine_name)
+# PATH_TRT_MODEL_from_ONNX = os.path.join(DATA_REPO_DIR, "ONNX_Model/Repo", engine_name)
 
 engine_name = "ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8.engine"
 PATH_TRT_MODEL_from_ONNX = os.path.join(DATA_REPO_DIR_FPN, "ONNX_Model/Repo", engine_name)
