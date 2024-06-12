@@ -1,13 +1,13 @@
 #include "tensorflow/core/framework/shape_inference.h"
+#include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/op.h"
 
 
 using namespace tensorflow;
 
-REGISTER_OP("Concat_TRT")
-    //.Attr("name: string = 'priorbox_concat'")
+REGISTER_OP("Squeeze_TRT")
+    //.Attr("name: string = 'squeeze'")
     .Attr("axis: int")
     .Attr("dtype: type = DT_FLOAT")
-    .Attr("N: int >= 1")
-    .Input("priorbox: N * float")
-    .Output("priorbox_concat: dtype");
+    .Input("boxloc_concat: dtype")
+    .Output("squeeze: dtype");

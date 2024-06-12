@@ -1,4 +1,5 @@
 #include "tensorflow/core/framework/shape_inference.h"
+#include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/op.h"
 
 
@@ -8,6 +9,5 @@ REGISTER_OP("Concat_TRT")
     //.Attr("name: string = 'priorbox_concat'")
     .Attr("axis: int")
     .Attr("dtype: type = DT_FLOAT")
-    .Attr("N: int >= 1")
-    .Input("priorbox: N * float")
+    .Input("priorbox: dtype")
     .Output("priorbox_concat: dtype");
