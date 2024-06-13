@@ -28,15 +28,15 @@ FROZEN_GRAPH_NAME = 'saved_model.pb'        # for TF v2
 # MODEL_NAME = "ssd_mobilenet_v2_320x320_coco17_tpu-8"
 MODEL_NAME = "ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8"
 
-# MODEL_TRT = "ssd_mobilenet_v2_320x320_coco17_tpu-8_tf_v2"
-# MODEL_TRT = "ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8_tf_v2"
-MODEL_TRT = "ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8"
+# MODEL_TRT = "ssd_mobilenet_v2_320x320_coco17_tpu-8"
+# MODEL_TRT = "ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8"
+MODEL_TRT = "ssd_mobilenet_v2_fpnlite_320x320_coco17"
 
 WORK = os.getcwd()
 
 # DATA_REPO_DIR = os.path.join("../../", "Data_Repo/Model_Conversion/SSD_mobilenet")
 # DATA_REPO_DIR = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion/SSD_mobilenet")
-DATA_REPO_DIR = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion/SSD_mobilenet_FPN")
+DATA_REPO_DIR = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion", MODEL_NAME)
 os.makedirs(DATA_REPO_DIR, exist_ok=True)
 
 ONNX_WORK_SPACE = os.path.join(DATA_REPO_DIR, "ONNX_Model")
@@ -218,6 +218,7 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
     node_reshape_boxloc_5 = [nd for nd in onnx_graph.nodes if nd.name == "BoxPredictor/ConvolutionalBoxHead_5/Reshape"][0]
     node_reshape_boxloc_5.inputs[0] = node_boxloc_5_trnsp.outputs[0]
     '''
+
     # node_GridAnchor_TRT_0, add dummy input
     node_GridAnchor_TRT_0 = [nd for nd in onnx_graph.nodes if nd.name == "priorbox_0"][0]
     input_GridAnchor_TRT_0 = gs_onnx.Constant(name="priorbox_0_in:", values=np.ones(1))
@@ -240,10 +241,23 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
     node_priorbox_concat_1.inputs = node_GridAnchor_TRT_1.outputs
     node_priorbox_concat_1.outputs[0].dtype = np.float32
 
+    '''
+    priorbox_concat_p = []
+    for n in range(len(node_GridAnchor_TRT_0.outputs)):
+        nd_name = "priorbox_concat_p_" + str(n)
+        out_name = nd_name + '_output'
+        output_pc = gs_onnx.Variable(name=out_name, dtype=np.float32)
+        pc = gs_onnx.Node(op="Concat", name=nd_name, attrs={"axis": 2},
+                          inputs=[node_GridAnchor_TRT_0.outputs[n], node_GridAnchor_TRT_1.outputs[n]],
+                          outputs=[output_pc])
+        priorbox_concat_p.append(pc)
+        onnx_graph.nodes.append(pc)
+    '''
     # node_priorbox_concat, modify op name and add explicitly the inputs from node_GridAnchor_TRT
     node_priorbox_concat = [nd for nd in onnx_graph.nodes if nd.name == "priorbox_concat"][0]
     node_priorbox_concat.op = "Concat"
     node_priorbox_concat.attrs.pop("N", None)
+    # node_priorbox_concat.inputs = [pc.outputs[0] for pc in priorbox_concat_p]
     node_priorbox_concat.inputs = [node_priorbox_concat_0.outputs[0], node_priorbox_concat_1.outputs[0]]
     node_priorbox_concat.outputs[0].dtype = np.float32
 

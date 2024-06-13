@@ -247,11 +247,12 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     scales_per_octave = anchor_generator_config.scales_per_octave
     min_size_0 = anchor_scale * 2**anchor_generator_config.min_level / height  # add additional layer but ignor it in later operation
     max_size_0 = anchor_scale * 2**anchor_generator_config.max_level / height
-    spo = [(2 ** (float(scale) / scales_per_octave))**2 for scale in range(scales_per_octave)]
+    spo = [2 ** (float(scale) / scales_per_octave) for scale in range(scales_per_octave)]
     min_size = [min_size_0 * s  for s in spo]
     max_size = [max_size_0 * s  for s in spo]
 
     aspect_ratios = list(anchor_generator_config.aspect_ratios)[1:]     # ignor aspect_ratios = 1 which will be auto gen by TRT
+    # aspect_ratios.reverse()
     feature_map_shapes = get_feature_map_shape_fpn(config)
 
     # create GridAnchor for scale 0 of each octave
