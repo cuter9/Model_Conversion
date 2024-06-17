@@ -237,6 +237,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         shape=[1, height, width, channels])
 
     # create anchor box generator
+
     anchor_generator_config = config.model.ssd.anchor_generator.multiscale_anchor_generator
     box_coder_config = config.model.ssd.box_coder.faster_rcnn_box_coder
 
@@ -255,6 +256,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     # aspect_ratios.reverse()
     feature_map_shapes = get_feature_map_shape_fpn(config)
 
+    # use 2 GridAnchor_TRT to generate bounding boxes grid for each scale in octatve layer for all layer
     # create GridAnchor for scale 0 of each octave
     priorbox_plugin_0 = gs.create_node(
         name="priorbox_0",
@@ -337,6 +339,8 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     priorbox_concat_plugin_1 = gs.create_node(
         "priorbox_concat_1", op="Concat_TRT", N=1, dtype=tf.float32, axis=2)
     priorbox_concat_plugin_1.input.extend(["priorbox_1"])
+
+    # grid_anchor_list, grid_anchor_array = grid_anchor_gen(config)
 
     # squeeze_plugin = gs.create_node(
     #    "squeeze", op="Squeeze_TRT", axis=2, inputs=["boxloc_concat"])
@@ -497,3 +501,51 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     # load_customer_op(path_tf_custom_op)
 
     return input_name, output_name, path_tf_custom_op
+
+def grid_anchor_gen(config):
+    from object_detection.anchor_generators import multiscale_grid_anchor_generator
+
+    anchor_generator_config = config.model.ssd.anchor_generator.multiscale_anchor_generator
+    # box_coder_config = config.model.ssd.box_coder.faster_rcnn_box_coder
+    num_layers = anchor_generator_config.max_level - anchor_generator_config.min_level + 1
+    min_level = anchor_generator_config.min_level
+    max_level = anchor_generator_config.max_level
+    anchor_scale = anchor_generator_config.anchor_scale
+    scales_per_octave = anchor_generator_config.scales_per_octave
+    aspect_ratios = anchor_generator_config.aspect_ratios
+    grid_gen = multiscale_grid_anchor_generator.MultiscaleGridAnchorGenerator(min_level,
+                                                                              max_level,
+                                                                              anchor_scale,
+                                                                              aspect_ratios,
+                                                                              scales_per_octave)
+
+    feature_map_shapes = [(h, h) for h in get_feature_map_shape_fpn(config)]
+    height = config.model.ssd.image_resizer.fixed_shape_resizer.height
+    width = config.model.ssd.image_resizer.fixed_shape_resizer.width
+    grid_anchor_list = grid_gen._generate(feature_map_shapes, im_height=height, im_width=width)
+
+    grid_anchor_list_reshape = []
+    for g in grid_anchor_list:
+        grid_anchor_list_reshape.append(np.reshape(g.data['boxes'].numpy(), newshape=[1, -1, 1, 1]))
+
+    grid_anchor_array = np.concatenate(grid_anchor_list_reshape, 0)
+
+    return grid_anchor_list, grid_anchor_array
+def grid_anchor_gen_1(config):
+    anchor_generator_config = config.model.ssd.anchor_generator.multiscale_anchor_generator
+    box_coder_config = config.model.ssd.box_coder.faster_rcnn_box_coder
+    num_layers = anchor_generator_config.max_level - anchor_generator_config.min_level + 1
+    anchor_scale = anchor_generator_config.anchor_scale
+    # anchor_scale = 2
+    scales_per_octave = anchor_generator_config.scales_per_octave
+    spo = [2 ** (float(scale) / scales_per_octave) for scale in range(scales_per_octave)]
+    aspect_ratios = list(anchor_generator_config.aspect_ratios)
+    # aspect_ratios.reverse()
+    feature_map_shapes = get_feature_map_shape_fpn(config)
+    grid_size = [2 ** bs for bs in range(anchor_generator_config.min_level, anchor_generator_config.max_level+1)]
+    base_anchor_size = anchor_scale * np.asarray(grid_size)
+    anchor_height = np.asarray([[np.asarray(spo) * bar * np.sqrt(ar) for ar in aspect_ratios] for bar in base_anchor_size])
+    anchor_width = np.asarray([[np.asarray(spo) * bar / np.sqrt(ar) for ar in aspect_ratios] for bar in base_anchor_size])
+    anchor_center_x = [np.asarray([np.ones(len(spo) * len(aspect_ratios)) * (g + 0.5) * np.asarray(gsize) for g in range(fms)]) for fms, gsize in zip(feature_map_shapes, grid_size)]
+    anchor_center_y = [np.asarray([np.ones(len(spo) * len(aspect_ratios)) * (g + 0.5) * np.asarray(gsize) for g in range(fms)]) for fms, gsize in zip(feature_map_shapes, grid_size)]
+    return [anchor_height, anchor_width, anchor_center_x, anchor_center_y]

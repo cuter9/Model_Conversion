@@ -235,11 +235,31 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
     node_priorbox_concat_0.inputs = node_GridAnchor_TRT_0.outputs
     node_priorbox_concat_0.outputs[0].dtype = np.float32
 
+    # reshape priorbox_cocate_0 output from [1, 1, -1, 1] --> [1, 1, -1, 4], and then concatenate with priorbox_cocate_1
+    nd_name_0 = 'priorbox_concat_0_reshape'
+    out_name_0 = nd_name_0 + '_output'
+    output_0 = gs_onnx.Variable(name=out_name_0, dtype=np.float32)
+    shape_0 = gs_onnx.Constant(name="'priorbox_concat_0_shape", values=np.array([1, 2, -1, 4]))
+    pc_rs_0 = gs_onnx.Node(op="Reshape", name=nd_name_0, attrs={"allowzero": 0},
+                      inputs=[node_priorbox_concat_0.outputs[0], shape_0],
+                      outputs=[output_0])
+    onnx_graph.nodes.append(pc_rs_0)
+
     node_priorbox_concat_1 = [nd for nd in onnx_graph.nodes if nd.name == "priorbox_concat_1"][0]
     node_priorbox_concat_1.op = "Concat"
     node_priorbox_concat_1.attrs.pop("N", None)
     node_priorbox_concat_1.inputs = node_GridAnchor_TRT_1.outputs
     node_priorbox_concat_1.outputs[0].dtype = np.float32
+
+    # reshape priorbox_cocate_1 output from [1, 2, -1, 1] --> [1, 2, -1, 4], and then concatenate with priorbox_cocate_0
+    nd_name_1 = 'priorbox_concat_1_reshape'
+    out_name_1 = nd_name_1 + '_output'
+    output_1 = gs_onnx.Variable(name=out_name_1, dtype=np.float32)
+    shape_1 = gs_onnx.Constant(name="priorbox_concat_1_shape", values=np.array([1, 2, -1, 4]))
+    pc_rs_1 = gs_onnx.Node(op="Reshape", name=nd_name_1, attrs={"allowzero": 0},
+                           inputs=[node_priorbox_concat_1.outputs[0], shape_1],
+                           outputs=[output_1])
+    onnx_graph.nodes.append(pc_rs_1)
 
     '''
     priorbox_concat_p = []
@@ -257,9 +277,21 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
     node_priorbox_concat = [nd for nd in onnx_graph.nodes if nd.name == "priorbox_concat"][0]
     node_priorbox_concat.op = "Concat"
     node_priorbox_concat.attrs.pop("N", None)
-    # node_priorbox_concat.inputs = [pc.outputs[0] for pc in priorbox_concat_p]
-    node_priorbox_concat.inputs = [node_priorbox_concat_0.outputs[0], node_priorbox_concat_1.outputs[0]]
+    node_priorbox_concat.attrs["axis"] = 3
+    node_priorbox_concat.inputs = [pc_rs_0.outputs[0], pc_rs_1.outputs[0]]
+    # node_priorbox_concat.inputs = [node_priorbox_concat_0.outputs[0], node_priorbox_concat_1.outputs[0]]
     node_priorbox_concat.outputs[0].dtype = np.float32
+
+    # reshape node_priorbox_concat from [1, 1, -1, 4] back to [1, 1, -1, 1]
+    nd_name_ga_trt = 'priorbox_concat_reshape'
+    out_name_ga_trt = nd_name_ga_trt + '_output'
+    output_ga_trt = gs_onnx.Variable(name=out_name_ga_trt, dtype=np.float32)
+    shape_ga_trt = gs_onnx.Constant(name="priorbox_concat_shape", values=np.array([1, 2, -1, 1]))
+    node_priorbox_concat_reshape = gs_onnx.Node(op="Reshape", name=nd_name_ga_trt, attrs={"allowzero": 0},
+                                                inputs=[node_priorbox_concat.outputs[0], shape_ga_trt],
+                                                outputs=[output_ga_trt])
+    onnx_graph.nodes.append(node_priorbox_concat_reshape)
+
 
     node_boxconf_concat = [nd for nd in onnx_graph.nodes if nd.name == "boxconf_concat"][0]
     node_boxconf_concat.outputs[0].dtype = np.float32
@@ -281,7 +313,7 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
     node_NMS_TRT = [nd for nd in onnx_graph.nodes if nd.name == "nms"][0]
     output_nms_0 = gs_onnx.Variable(name="nms:0", dtype=np.float32)
     output_nms_1 = gs_onnx.Variable(name="nms:1", dtype=np.float32)
-    node_NMS_TRT.inputs = [node_priorbox_concat.outputs[0],
+    node_NMS_TRT.inputs = [node_priorbox_concat_reshape.outputs[0],
                            node_boxloc_concat.outputs[0],
                            node_boxconf_concat.outputs[0]]
     # node_NMS_TRT.inputs = [node_boxloc_concat.outputs[0],
