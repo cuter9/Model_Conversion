@@ -2,8 +2,8 @@
 
 using namespace tensorflow;
 
-class NMS_TRT : public OpKernel {
+class NMS_TRTOP : public OpKernel {
 	public:
-		explicit NMS_TRT(OpKernelConstruction* context) : OpKernel(context) {
+		explicit NMS_TRTOP(OpKernelConstruction* context) : OpKernel(context) {
 	}
 };
