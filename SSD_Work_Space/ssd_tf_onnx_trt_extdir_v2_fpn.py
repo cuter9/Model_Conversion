@@ -154,10 +154,14 @@ def rev_onnx_attr(onnx_model_proto):
 
     # delete the attribute "dtype" of the custom op in onnx model when convert from tf model,
     # it is not needed in onnx parser for trt
+    '''
     nd_box = [nd for nd in onnx_model_proto.graph.node
               if nd.name in ["priorbox",
                              "priorbox_concat", "priorbox_concat_0", "priorbox_concat_1",
                              "boxconf_concat", "boxloc_concat", "nms"]]
+    '''
+    nd_box = [nd for nd in onnx_model_proto.graph.node
+              if nd.name in ["priorbox_concat", "boxconf_concat", "boxloc_concat", "nms"]]
     for nd in nd_box:
         nd_attr = [(iattr, attr) for iattr, attr in enumerate(nd.attribute) if attr.name == "dtype"][0]
         nd.attribute.pop(nd_attr[0])
@@ -172,7 +176,7 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
     onnx_model_proto = onnx.load(path_onnx_model, format='protobuf')
     onnx_graph = gs_onnx.import_onnx(onnx_model_proto)
 
-
+    '''
     nodes_reshape_conf = [nd for nd in onnx_graph.nodes
                           if nd.op == "Reshape" and nd.name.split("/")[1] == "WeightSharedConvolutionalClassHead"]
     for nd in nodes_reshape_conf:
@@ -182,6 +186,7 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
                           if nd.op == "Reshape" and nd.name.split("/")[1] == "WeightSharedConvolutionalBoxHead"]
     for nd in nodes_reshape_loc:
         nd.inputs[1].values = np.array([1, -1, 1, 4])
+    '''
 
     '''
     # insert transpose after BoxPredictor_5 boxconf
@@ -219,6 +224,7 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
     node_reshape_boxloc_5.inputs[0] = node_boxloc_5_trnsp.outputs[0]
     '''
 
+    '''
     # node_GridAnchor_TRT_0, add dummy input
     node_GridAnchor_TRT_0 = [nd for nd in onnx_graph.nodes if nd.name == "priorbox_0"][0]
     input_GridAnchor_TRT_0 = gs_onnx.Constant(name="priorbox_0_in:", values=np.ones(1))
@@ -260,6 +266,7 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
                            inputs=[node_priorbox_concat_1.outputs[0], shape_1],
                            outputs=[output_1])
     onnx_graph.nodes.append(pc_rs_1)
+    '''
 
     '''
     priorbox_concat_p = []
@@ -273,15 +280,20 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
         priorbox_concat_p.append(pc)
         onnx_graph.nodes.append(pc)
     '''
+
     # node_priorbox_concat, modify op name and add explicitly the inputs from node_GridAnchor_TRT
-    node_priorbox_concat = [nd for nd in onnx_graph.nodes if nd.name == "priorbox_concat"][0]
+    # node_priorbox_concat = [nd for nd in onnx_graph.nodes if nd.name == "priorbox_concat"][0]
+
+    '''
     node_priorbox_concat.op = "Concat"
     node_priorbox_concat.attrs.pop("N", None)
     node_priorbox_concat.attrs["axis"] = 3
     node_priorbox_concat.inputs = [pc_rs_0.outputs[0], pc_rs_1.outputs[0]]
     # node_priorbox_concat.inputs = [node_priorbox_concat_0.outputs[0], node_priorbox_concat_1.outputs[0]]
     node_priorbox_concat.outputs[0].dtype = np.float32
+    '''
 
+    '''
     # reshape node_priorbox_concat from [1, 1, -1, 4] back to [1, 1, -1, 1]
     nd_name_ga_trt = 'priorbox_concat_reshape'
     out_name_ga_trt = nd_name_ga_trt + '_output'
@@ -291,8 +303,8 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
                                                 inputs=[node_priorbox_concat.outputs[0], shape_ga_trt],
                                                 outputs=[output_ga_trt])
     onnx_graph.nodes.append(node_priorbox_concat_reshape)
-
-
+    '''
+    '''
     node_boxconf_concat = [nd for nd in onnx_graph.nodes if nd.name == "boxconf_concat"][0]
     node_boxconf_concat.outputs[0].dtype = np.float32
     for o in list(node_boxconf_concat.inputs):
@@ -302,25 +314,41 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
     node_boxloc_concat.outputs[0].dtype = np.float32
     for o in list(node_boxloc_concat.inputs):
         o.dtype = np.float32
+    '''
+    # node_boxloc_concat = [nd for nd in onnx_graph.nodes if nd.name == "concat"][0]
+    # node_boxconf_concat = [nd for nd in onnx_graph.nodes if nd.name == "concat_1"][0]
 
     '''
     # squeeze, modify op name
     node_squeeze = [nd for nd in onnx_graph.nodes if nd.name == "squeeze"][0]
     node_squeeze.op = "Squeeze"
     '''
-
+    '''
     # node_NMS_TRT, reconnect
     node_NMS_TRT = [nd for nd in onnx_graph.nodes if nd.name == "nms"][0]
+    node_NMS_TRT.op = ""
     output_nms_0 = gs_onnx.Variable(name="nms:0", dtype=np.float32)
     output_nms_1 = gs_onnx.Variable(name="nms:1", dtype=np.float32)
-    node_NMS_TRT.inputs = [node_priorbox_concat_reshape.outputs[0],
+    node_NMS_TRT.inputs = [node_priorbox_concat.outputs[0],
                            node_boxloc_concat.outputs[0],
                            node_boxconf_concat.outputs[0]]
     # node_NMS_TRT.inputs = [node_boxloc_concat.outputs[0],
     #                       node_priorbox_concat.outputs[0],
-    #                       node_boxconf_concat.outputs[0]]
-
+    #                       node_boxconf_concat.outputs[0]]    
     node_NMS_TRT.outputs = [output_nms_0, output_nms_1]
+    onnx_graph.outputs = node_NMS_TRT.outputs
+    '''
+
+    node_NMS_TRT = [nd for nd in onnx_graph.nodes if nd.name == "nms"][0]
+    # node_NMS_TRT.op = "EfficientNMS_TRT"
+    output_nms_0 = gs_onnx.Variable(name="num_detections", dtype=np.float32)
+    output_nms_1 = gs_onnx.Variable(name="detection_boxes", dtype=np.float32)
+    output_nms_2 = gs_onnx.Variable(name="detection_scores", dtype=np.float32)
+    output_nms_3 = gs_onnx.Variable(name="detection_classes", dtype=np.float32)
+    # node_NMS_TRT.inputs = [node_boxloc_concat.outputs[0],
+    #                       node_boxconf_concat.outputs[0],
+    #                       node_priorbox_concat.outputs[0]]
+    node_NMS_TRT.outputs = [output_nms_0, output_nms_1, output_nms_2, output_nms_3]
     onnx_graph.outputs = node_NMS_TRT.outputs
 
     # onnx_graph.outputs = [output_boxloc_concat]

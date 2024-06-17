@@ -76,6 +76,7 @@ def convtf2onnx(path_graph_pb, path_onnx_model, path_onnx_model_1, input_name, o
     # the custom op should be registered (in directory ~/tensorflow_trt_op) before conversion by load_customer_op()
 
     input_names = ["import/input:0"]
+    # output_names = ["import/nms:0"]
     output_names = ["import/nms:0"]
     # input_names = ["input:0"]
     # output_names = ["nms:0"]

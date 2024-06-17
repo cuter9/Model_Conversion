@@ -236,6 +236,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         # dtype=tf.uint8,
         shape=[1, height, width, channels])
 
+    '''
     # create anchor box generator
 
     anchor_generator_config = config.model.ssd.anchor_generator.multiscale_anchor_generator
@@ -300,7 +301,9 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
 
     dynamic_graph.append(priorbox_plugin_0)
     dynamic_graph.append(priorbox_plugin_1)
+    '''
 
+    '''
     # create nms plugin
     nms_config = config.model.ssd.post_processing.batch_non_max_suppression
     nms_plugin = gs.create_node(
@@ -323,9 +326,23 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         isBatchAgnostic=1,
         codeType=1)     # box CodeTypeSSD : 1 = CORNER, https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-821/api/c_api/_nv_infer_plugin_utils_8h_source.html
         # codeType = 3)  # box CodeTypeSSD : 3 = TF_CENTER, https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-821/api/c_api/_nv_infer_plugin_utils_8h_source.html
+    '''
+    nms_config = config.model.ssd.post_processing.batch_non_max_suppression
+    nms_plugin = gs.create_node(
+        name=output_name,
+        op="EfficientNMS_TRT",
+        background_class=0,     # The label ID for the background
+        score_threshold=nms_config.score_threshold, # The scalar threshold for score (low scoring boxes are removed).
+        iou_threshold=nms_config.iou_threshold,     # The scalar threshold for IOU
+        max_detections_per_class=nms_config.max_detections_per_class,
+        max_output_boxes=nms_config.max_total_detections,
+        class_agnostic=1,      # Set to true to do class-independent NMS
+        score_activation=1,        # Set to true to apply sigmoid activation
+        box_coding=0)     #  0 = BoxCorner, 1 = BoxCenterSize, https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-821/api/c_api/_nv_infer_plugin_utils_8h_source.html
 
     # dynamic_graph.append(nms_plugin)
 
+    '''
     # tf built in op Concat is not suitable for onnx conversion,
     # thus use a custom op instead and replace later
     priorbox_concat_plugin = gs.create_node(
@@ -339,33 +356,44 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     priorbox_concat_plugin_1 = gs.create_node(
         "priorbox_concat_1", op="Concat_TRT", N=1, dtype=tf.float32, axis=2)
     priorbox_concat_plugin_1.input.extend(["priorbox_1"])
-
-    # grid_anchor_list, grid_anchor_array = grid_anchor_gen(config)
+    '''
+    grid_anchor_list, grid_anchor_tensor = grid_anchor_gen(config)
+    # g = tf.make_tensor_proto(grid_anchor_tensor, dtype=tf.float32)
+    # a = np.asarray([[1.0], [1.0]], dtype=np.float32)
+    priorbox_concat_plugin = gs.create_node(
+        name="priorbox_concat",
+        op="Const",
+        value=grid_anchor_tensor,
+        dtype=tf.float32
+    )
+    # there is a bug of trt graphsurgeon API missing dtype in tensor conversion
+    priorbox_concat_plugin.attr["value"].tensor.dtype = tf.as_dtype(grid_anchor_tensor.dtype).as_datatype_enum
 
     # squeeze_plugin = gs.create_node(
     #    "squeeze", op="Squeeze_TRT", axis=2, inputs=["boxloc_concat"])
 
     # dynamic_graph.append(priorbox_concat_plugin)
-    dynamic_graph.append(priorbox_concat_plugin_0)
-    dynamic_graph.append(priorbox_concat_plugin_1)
-
+    # dynamic_graph.append(priorbox_concat_plugin_0)
+    # dynamic_graph.append(priorbox_concat_plugin_1)
+    '''
     boxloc_concat_plugin = gs.create_node(
-        "boxloc_concat",
-        op="FlattenConcat_TRT",
+        name="boxloc_concat",
+        op="Concat",
         # dtype=tf.float32,
         axis=1,  # Currently only axis = 1 is supported.
         ignoreBatch=0  # Currently only ignoreBatch = false is supported.
     )
 
     boxconf_concat_plugin = gs.create_node(
-        "boxconf_concat",
-        op="FlattenConcat_TRT",
+        name="boxconf_concat",
+        op="Cancat",
         # dtype=tf.float32,
         axis=1,
         ignoreBatch=0
     )
-
-    nms_plugin.input.extend(["boxloc_concat", "boxconf_concat", "priorbox_concat"])
+    '''
+    # nms_plugin.input.extend(["boxloc_concat", "boxconf_concat", "priorbox_concat"])
+    nms_plugin.input.extend(["concat", "concat_1", "priorbox_concat"])
     # dynamic_graph.append(nms_plugin)
 
     # create output plugin
@@ -390,8 +418,8 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         "image_tensor": input_plugin,
         "Concatenate": priorbox_concat_plugin,
 #        "Squeeze": squeeze_plugin,
-        "concat": boxloc_concat_plugin,
-        "concat_1": boxconf_concat_plugin
+#        "concat": boxloc_concat_plugin,
+#        "concat_1": boxconf_concat_plugin
     }
 
     dynamic_graph.collapse_namespaces(namespace_plugin_map)
@@ -417,12 +445,20 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     dynamic_graph.remove(
         dynamic_graph.find_nodes_by_path(namespace_remove), remove_exclusive_dependencies=False)
 
+    '''
     # fix name and draw out the graph input from the input to the NMS_TRT node (output node)
     for n in range(len(dynamic_graph.find_nodes_by_op('NMS_TRT'))):
         for i, name in enumerate(
                 dynamic_graph.find_nodes_by_op('NMS_TRT')[n].input):
             if input_name in name:
                 dynamic_graph.find_nodes_by_op('NMS_TRT')[n].input.pop(i)
+    '''
+    # fix name and draw out the graph input from the input to the NMS_TRT node (output node)
+    for n in range(len(dynamic_graph.find_nodes_by_op('EfficientNMS_TRT'))):
+        for i, name in enumerate(
+                dynamic_graph.find_nodes_by_op('EfficientNMS_TRT')[n].input):
+            if input_name in name:
+                dynamic_graph.find_nodes_by_op('EfficientNMS_TRT')[n].input.pop(i)
 
     # remove all inputs to the node GridAnchor_TRT which needs no input
     # for n in range(len(dynamic_graph.find_nodes_by_op('GridAnchor_TRT'))):
@@ -526,11 +562,13 @@ def grid_anchor_gen(config):
 
     grid_anchor_list_reshape = []
     for g in grid_anchor_list:
-        grid_anchor_list_reshape.append(np.reshape(g.data['boxes'].numpy(), newshape=[1, -1, 1, 1]))
+        # grid_anchor_list_reshape.append(np.reshape(g.data['boxes'].numpy(), newshape=[1, -1, 1]))
+        b = tf.convert_to_tensor(np.expand_dims(g.data['boxes'].numpy(), axis=0))
+        grid_anchor_list_reshape.append(b)
 
-    grid_anchor_array = np.concatenate(grid_anchor_list_reshape, 0)
-
-    return grid_anchor_list, grid_anchor_array
+    grid_anchor_tensor_0 = np.concatenate(grid_anchor_list_reshape, 1)
+    grid_anchor_tensor = grid_anchor_tensor_0.astype(np.float32)
+    return grid_anchor_list, grid_anchor_tensor
 def grid_anchor_gen_1(config):
     anchor_generator_config = config.model.ssd.anchor_generator.multiscale_anchor_generator
     box_coder_config = config.model.ssd.box_coder.faster_rcnn_box_coder

@@ -9,6 +9,7 @@ GRID_ANCHOR_TRT_SRCS = $(wildcard $(DIR_SOURCE)/grid_ancjor_trt/*.cc)
 FLATTERN_CONCAT_TRT_SRCS = $(wildcard $(DIR_SOURCE)/flattern_concat_trt/*.cc)
 CONCAT_TRT_SRCS = $(wildcard $(DIR_SOURCE)/concat_trt/*.cc) 
 NMS_TRT_SRCS = $(wildcard $(DIR_SOURCE)/nms_trt/*.cc) 
+EFFICIENT_NMS_TRT_SRCS = $(wildcard $(DIR_SOURCE)/efficient_nms_trt/*.cc) 
 SQUEEZE_TRT_SRCS = $(wildcard $(DIR_SOURCE)/squeeze_trt/*.cc) 
 
 TF_CFLAGS := $(shell $(PYTHON_BIN_PATH) -c 'import tensorflow as tf; print(" ".join(tf.sysconfig.get_compile_flags()))')
@@ -21,13 +22,14 @@ GRID_ANCHOR_TRT_TARGET_LIB = $(DIR_OPLIB)/_grid_anchor_trt_ops.so
 FLATTERN_CONCAT_TRT_TARGET_LIB = $(DIR_OPLIB)/_flattern_concat_trt_ops.so
 CONCAT_TRT_TARGET_LIB = $(DIR_OPLIB)/_concat_trt_ops.so
 NMS_TRT_TARGET_LIB = $(DIR_OPLIB)/_nms_trt_ops.so
+EFFICIENT_NMS_TRT_TARGET_LIB = $(DIR_OPLIB)/_efficient_nms_trt_ops.so
 SQUEEZE_TRT_TARGET_LIB = $(DIR_OPLIB)/_squeeze_trt_ops.so
 TRT_LIB = $(DIR_OPLIB)/_trt_ops.so
 
-all: grid_anchor_trt_op flattern_concat_trt_op concat_trt_op nms_trt_op squeeze_trt_op
+all: grid_anchor_trt_op flattern_concat_trt_op concat_trt_op nms_trt_op efficient_nms_trt_op squeeze_trt_op
 
 trt_ops:  $(TRT_LIB)
-$(TRT_LIB): $(GRID_ANCHOR_TRT_SRCS) $(FLATTERN_CONCAT_TRT_SRCS) $(CONCAT_TRT_SRCS) $(NMS_TRT_SRCS) $(SQUEEZE_TRT_SRCS)
+$(TRT_LIB): $(GRID_ANCHOR_TRT_SRCS) $(FLATTERN_CONCAT_TRT_SRCS) $(CONCAT_TRT_SRCS) $(NMS_TRT_SRCS) $(EFFICIENT_NMS_TRT_SRCS) $(SQUEEZE_TRT_SRCS)
 	$(CXX) $(CFLAGS) -o $@ $^ ${LDFLAGS}
 
 # grid_anchor_trt op for CPU
@@ -49,6 +51,10 @@ nms_trt_op: $(NMS_TRT_TARGET_LIB)
 $(NMS_TRT_TARGET_LIB): $(NMS_TRT_SRCS)
 	$(CXX) $(CFLAGS) -o $@ $^ ${LDFLAGS}
 
+efficient_nms_trt_op: $(EFFICIENT_NMS_TRT_TARGET_LIB)
+$(EFFICIENT_NMS_TRT_TARGET_LIB): $(EFFICIENT_NMS_TRT_SRCS)
+	$(CXX) $(CFLAGS) -o $@ $^ ${LDFLAGS}
+
 squeeze_trt_op: $(SQUEEZE_TRT_TARGET_LIB)
 $(SQUEEZE_TRT_TARGET_LIB): $(SQUEEZE_TRT_SRCS)
 	$(CXX) $(CFLAGS) -o $@ $^ ${LDFLAGS}
@@ -65,6 +71,7 @@ clean:
 	rm -f $(FLATTERN_CONCAT_TRT_TARGET_LIB)
 	rm -f $(CONCAT_TRT_TARGET_LIB)
 	rm -f $(NMS_TRT_TARGET_LIB)
+	rm -f $(EFFICIENT_NMS_TRT_TARGET_LIB)
 	rm -f $(SQUEEZE_TRT_TARGET_LIB)
 	rm -f $(TRT_LIB)
 
