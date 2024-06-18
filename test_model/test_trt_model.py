@@ -25,21 +25,28 @@ if os.path.isdir(TEST_DIR):
     subprocess.call(['rm', '-r', TEST_DIR])
 subprocess.call(['mkdir', '-p', TEST_DIR])
 
+FPN = True
 # os.makedirs(TEST_DIR, exist_ok=True)
 
 # PATH_TRT_MODEL_from_ONNX = "/home/cuterbot/Model_Conversion/SSD_Work_Space/ONNX_Model/Repo/ssd_mobilenet_v2_coco.engine"
 # PATH_TRT_MODEL_from_UFF = "/home/cuterbot/Model_Conversion/SSD_Work_Space/UFF_Model/Repo/ssd_mobilenet_v2_coco.engine"
 # engine_name = "ssd_mobilenet_v2_coco.engine"
-# engine_name = "ssd_mobilenet_v2_320x320_coco17_tpu-8_tf_v2.engine"
-# PATH_TRT_MODEL_from_ONNX = os.path.join(DATA_REPO_DIR, "ONNX_Model/Repo", engine_name)
+if FPN:
+    engine_name = "ssd_mobilenet_v2_fpnlite_320x320_coco17.engine"
+    PATH_TRT_MODEL_from_ONNX = os.path.join(DATA_REPO_DIR_FPN, "ONNX_Model/Repo", engine_name)
+else:
+    engine_name = "ssd_mobilenet_v2_320x320_coco17_tpu-8_tf_v2.engine"
+    PATH_TRT_MODEL_from_ONNX = os.path.join(DATA_REPO_DIR, "ONNX_Model/Repo", engine_name)
 
-engine_name = "ssd_mobilenet_v2_fpnlite_320x320_coco17.engine"
-PATH_TRT_MODEL_from_ONNX = os.path.join(DATA_REPO_DIR_FPN, "ONNX_Model/Repo", engine_name)
 PATH_TRT_MODEL_from_UFF = os.path.join(DATA_REPO_DIR, "UFF_Model/Repo/", engine_name)
 
 WINDOW_NAME = 'TrtSsdModelTest'
-# INPUT_HW = (300, 300)   # "ssd_mobilenet_v2_coco.engine"
-INPUT_HW = (320, 320)   # "ssd_mobilenet_v2_fpn_coco.engine"
+
+if FPN:
+    INPUT_HW = (320, 320)   # "ssd_mobilenet_v2_fpn_coco.engine"
+else:
+    INPUT_HW = (300, 300)   # "ssd_mobilenet_v2_coco.engine"
+
 
 def verify_trt_model(path_model, model_type):
     test_img = os.path.join(TEST_DIR, "test.jpg")
@@ -60,8 +67,9 @@ def verify_trt_model(path_model, model_type):
 
     vis = BBoxVisualization(cls_dict)
     test_op = False
+
     # boxes: [[x_min_object_box, y_min_object_box, x_max_object_box, y_max_object_box], []] for draw
-    boxes, confs, clss = trt_ssd.detect(img_handle, model_type, test_op, conf_th=0.5)
+    boxes, confs, clss = trt_ssd.detect(img_handle, model_type, test_op, fpn=FPN, conf_th=0.5)
     img_handle = vis.draw_bboxes(img_handle, boxes, confs, clss)
     cv2.imshow(WINDOW_NAME, img_handle)
     while True:

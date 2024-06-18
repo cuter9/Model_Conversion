@@ -75,12 +75,9 @@ def convtf2onnx(path_graph_pb, path_onnx_model, path_onnx_model_1, input_name, o
     # This function is used for convert tf model to onnx model with customer op,
     # the custom op should be registered (in directory ~/tensorflow_trt_op) before conversion by load_customer_op()
 
-    input_names = ["import/input:0"]
-    # output_names = ["import/nms:0"]
-    output_names = ["import/nms:0"]
-    # input_names = ["input:0"]
-    # output_names = ["nms:0"]
-
+    # for redef_onnx_node_4_trt_plugin function
+    input_names = ["input:0"]
+    output_names = ["nms:0", "nms:1", "nms:2", "nms:3"]
     # with tf.compat.v1.Session() as sess:
     print("---- load graph and start convert tf frozen model to onnx")
     with tf.io.gfile.GFile(path_graph_pb, 'rb') as f:
@@ -92,10 +89,13 @@ def convtf2onnx(path_graph_pb, path_onnx_model, path_onnx_model_1, input_name, o
         graph_def = tf.compat.v1.GraphDef()
         graph_def.ParseFromString(f.read())
         model_proto, external_tensor_storage = tf2onnx.convert.from_graph_def(graph_def,
-                                                                              inputs_as_nchw=input_name,
-                                                                              input_names=input_name,
-                                                                              output_names=output_name)
-
+                                                                              inputs_as_nchw=input_names,
+                                                                              input_names=input_names,
+                                                                              output_names=output_names)
+    # for redef_onnx_node_4_trt_plugin_1 function
+    input_names_1 = ["import/input:0"]
+    # output_names = ["import/nms:0"]
+    output_names_1 = ["import/nms:0"]
     with tf.Graph().as_default() as graph, tf.io.gfile.GFile(path_graph_pb, 'rb') as f1:
         # *** The name var will prefix every op/nodes in your graph
         # Since we load everything in a new graph, this is not needed
@@ -110,9 +110,9 @@ def convtf2onnx(path_graph_pb, path_onnx_model, path_onnx_model_1, input_name, o
         graph_def_1.ParseFromString(f1.read())
         tf.compat.v1.import_graph_def(graph_def_1)
         onnx_graph = tf2onnx.tfonnx.process_tf_graph(graph,
-                                                     inputs_as_nchw=input_name,
-                                                     input_names=input_names,
-                                                     output_names=output_names)
+                                                     inputs_as_nchw=input_names_1,
+                                                     input_names=input_names_1,
+                                                     output_names=output_names_1)
 
         # print("---- convert onnx graph to onnx model proto ----")
         name_onnx_model = path_onnx_model_1.split(".")[0]

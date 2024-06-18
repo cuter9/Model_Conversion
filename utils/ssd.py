@@ -31,8 +31,9 @@ def _preprocess_trt(img, shape=(300, 300), m_type='uff'):
     return img
 
 
-def _postprocess_trt(img, output, conf_th, output_layout=7):
+def _postprocess_trt(img, out, conf_th, output_layout=7):
     """Postprocess TRT SSD output."""
+    output = out[0]
     img_h, img_w, _ = img.shape
     boxes, confs, clss = [], [], []
     # # box CodeTypeSSD : TF_CENTER, https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-821/api/c_api/_nv_infer_plugin_utils_8h_source.html
@@ -56,6 +57,36 @@ def _postprocess_trt(img, output, conf_th, output_layout=7):
         confs.append(conf)
         clss.append(cls)
     return boxes, confs, clss
+
+
+def _postprocess_fpn_trt(img, output, conf_th):
+    """Postprocess TRT SSD output."""
+    img_h, img_w, _ = img.shape
+    boxes, confs, clss = output[1].tolist(), output[2].tolist(), output[3].tolist()
+    boxes_out, confs_out, clss_out = [], [], []
+    # # box CodeTypeSSD : TF_CENTER, https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-821/api/c_api/_nv_infer_plugin_utils_8h_source.html
+    # output :  [ ,class ID, confidence score, x_min_object_box, y_min_object_box, x_max_object_box, y_max_object_box,
+    #             , ....
+    #             ,class ID, confidence score, x_min_object_box, y_min_object_box, x_max_object_box, y_max_object_box,
+    #             , ....]
+    for d in range(0, len(output[2])):
+        # index = int(output[prefix+0])
+        conf = float(confs[d])
+        if conf < conf_th:
+            continue
+        y1 = int(boxes[4*d] * img_h)
+        x1 = int(boxes[4*d+1] * img_w)
+        y2 = int(boxes[4*d+2] * img_h)
+        x2 = int(boxes[4*d+3] * img_w)
+        cls = int(clss[d])
+
+        bs = ','.join(list(map(str, boxes[4*d:4*d+4])))
+        print("---- one detection ---- \n class: %d, confidence: %f, box: [%s] \n "
+              % (clss[d], confs[d], bs))
+        boxes_out.append((x1, y1, x2, y2))
+        confs_out.append(conf)
+        clss_out.append(cls)
+    return boxes_out, confs_out, clss_out
 
 
 class TrtSSD(object):
@@ -136,7 +167,7 @@ class TrtSSD(object):
         del self.cuda_inputs
         del self.stream
 
-    def detect(self, img, model_type, test_op, conf_th=0.3):
+    def detect(self, img, model_type, test_op, fpn=False, conf_th=0.3):
         """Detect objects in the input image."""
         img_resized = _preprocess_trt(img, self.input_shape, model_type)
         np.copyto(self.host_inputs[0], img_resized.ravel())
@@ -176,14 +207,17 @@ class TrtSSD(object):
         # save_dir = os.path.join(work_dir, "/home/cuterbot/Model_Conversion/test_model/saved_data", model_type)
         # subprocess.run(["rm", "-r", save_dir])
         # subprocess.run(["mkdir", save_dir])
+        '''
         for ho, name_ho in zip(self.host_outputs, self.outputs_binding_name):
+            
             if test_op:
                 output = self.host_outputs[0]
             else:
                 print(name_ho)
                 if name_ho == "nms:0" or name_ho == "nms":
                     output = ho
-            output = self.host_outputs[0]
+        '''
+        output = self.host_outputs
             # np.save(os.path.join(save_dir, name_ho.replace("/", "_")), ho)
             # np.save(os.path.join(save_dir, "priorbox"), self.host_outputs[0])
             # np.save(os.path.join(save_dir, "boxconf"), self.host_outputs[1])
@@ -195,7 +229,10 @@ class TrtSSD(object):
         if test_op:
             return
         else:
-            return _postprocess_trt(img, output, conf_th)
+            if fpn:
+                return _postprocess_fpn_trt(img, output, conf_th)
+            else:
+                return _postprocess_trt(img, output, conf_th)
 
     def destroy(self):
         # self.runtime.destroy() # this function is depreciated

@@ -113,18 +113,21 @@ def ssd_pipeline_to_onnx(checkpoint_path, config_path,
     # onnx_model_proto = onnx.load(path_onnx_model, format='protobuf')
     rev_onnx_attr(onnx_model_proto_0)
     onnx.save_model(onnx_model_proto_0, path_onnx_model)
-
     onnx_graph = gs_onnx.import_onnx(onnx_model_proto_0)
+
+    '''
     nd_bn = [n for n in onnx_graph.nodes if n.op == "BatchNormalization"]
+    '''
 
     print("---- modify the attributes of onnx model 1 for ONNX parsing.  ----\n")
     # onnx_model_proto_1 = onnx.load(path_onnx_model_1, format='protobuf')
     rev_onnx_attr(onnx_model_proto_1_0)
     onnx.save_model(onnx_model_proto_1_0, path_onnx_model_1)
 
-    onnx_graph_1 = gs_onnx.import_onnx(onnx_model_proto_1_0)
+    '''
+    onnx_graph_1 = gs_onnx.import_onnx(onnx_model_proto_1_0)    
     nd_bn_1 = [n for n in onnx_graph_1.nodes if n.op == "BatchNormalization"]
-
+    
     # replace the input data of BatchNormalization op in onnx_model_proto_0
     # with onnx_model_proto_0_1 parameters;
     # and clean up the onnx_model_proto_0.
@@ -137,7 +140,7 @@ def ssd_pipeline_to_onnx(checkpoint_path, config_path,
                 n0.inputs[2] = n1.inputs[2]
                 n0.inputs[3] = n1.inputs[3]
                 n0.inputs[4] = n1.inputs[4]
-
+    '''
     onnx_graph.cleanup().toposort()
     onnx_model_proto_new = gs_onnx.export_onnx(onnx_graph)
     onnx.save_model(onnx_model_proto_new, path_onnx_model)
@@ -341,14 +344,14 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
 
     node_NMS_TRT = [nd for nd in onnx_graph.nodes if nd.name == "nms"][0]
     # node_NMS_TRT.op = "EfficientNMS_TRT"
-    output_nms_0 = gs_onnx.Variable(name="num_detections", dtype=np.float32)
-    output_nms_1 = gs_onnx.Variable(name="detection_boxes", dtype=np.float32)
-    output_nms_2 = gs_onnx.Variable(name="detection_scores", dtype=np.float32)
-    output_nms_3 = gs_onnx.Variable(name="detection_classes", dtype=np.float32)
+    # output_nms_0 = gs_onnx.Variable(name="num_detections", dtype=np.float32)
+    # output_nms_1 = gs_onnx.Variable(name="detection_boxes", dtype=np.float32)
+    # output_nms_2 = gs_onnx.Variable(name="detection_scores", dtype=np.float32)
+    # output_nms_3 = gs_onnx.Variable(name="detection_classes", dtype=np.float32)
     # node_NMS_TRT.inputs = [node_boxloc_concat.outputs[0],
     #                       node_boxconf_concat.outputs[0],
     #                       node_priorbox_concat.outputs[0]]
-    node_NMS_TRT.outputs = [output_nms_0, output_nms_1, output_nms_2, output_nms_3]
+    #node_NMS_TRT.outputs = [output_nms_0, output_nms_1, output_nms_2, output_nms_3]
     onnx_graph.outputs = node_NMS_TRT.outputs
 
     # onnx_graph.outputs = [output_boxloc_concat]
@@ -363,11 +366,13 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
     # onnx_graph.outputs.extend(node_boxloc_concat.inputs)
     # onnx_graph.outputs.extend(node_boxconf_concat.inputs)
 
+    '''
     # *** use "SAME_UPPER" because it is the same padding operation as the "same" used in uff conv op
     for nd_conv in onnx_graph.nodes:
         if nd_conv.op == "Conv":
             # nd_conv.attrs["pads"] = []  # [0, 0, 1, 1] --> [1, 1, 0, 0]
             nd_conv.attrs["auto_pad"] = "SAME_UPPER"  # "SAME_LOWER"; "SAME_UPPER" is same as the "same" in uff conv op
+    '''
 
     test_conv = False  # test the convolution op only, all the other ops and nodes will be removed
     if test_conv:
