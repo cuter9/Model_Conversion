@@ -26,13 +26,14 @@ FROZEN_GRAPH_NAME = 'saved_model.pb'        # for TF v2
 
 # Object Detection Model in TF V2 Model Zoo : https://github.com/tensorflow/models/tree/master/research/object_detection
 # MODEL_NAME = "ssd_mobilenet_v2_320x320_coco17_tpu-8"
-MODEL_NAME = "ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8"
+# MODEL_NAME = "ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8"
 # MODEL_NAME = "ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8"
-
+MODEL_NAME = "ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8"
 
 # MODEL_TRT = "ssd_mobilenet_v2_320x320_coco17_tpu-8"
-MODEL_TRT = "ssd_mobilenet_v2_fpnlite_320x320_coco17"
+# MODEL_TRT = "ssd_mobilenet_v2_fpnlite_320x320_coco17"
 # MODEL_TRT = "ssd_mobilenet_v2_fpnlite_640x640_coco17"
+MODEL_TRT = "ssd_mobilenet_v1_fpn_640x640_coco17"
 
 WORK = os.getcwd()
 
