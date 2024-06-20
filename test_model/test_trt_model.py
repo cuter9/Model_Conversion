@@ -20,6 +20,7 @@ WORK = os.getcwd()
 DATA_REPO_DIR = os.path.join(os.environ["HOME"], "Data_Repo/Model_Conversion/SSD_mobilenet")
 # DATA_REPO_DIR_FPN = os.path.join(os.environ["HOME"], "Data_Repo/Model_Conversion/ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8")
 DATA_REPO_DIR_FPN = os.path.join(os.environ["HOME"], "Data_Repo/Model_Conversion/ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8")
+# DATA_REPO_DIR_FPN = os.path.join(os.environ["HOME"], "Data_Repo/Model_Conversion/ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8")
 TEST_DIR = os.path.join(DATA_REPO_DIR, "Test Data")
 
 if os.path.isdir(TEST_DIR):
@@ -35,6 +36,7 @@ FPN = True
 if FPN:
     # engine_name = "ssd_mobilenet_v2_fpnlite_320x320_coco17.engine"
     engine_name = "ssd_mobilenet_v2_fpnlite_640x640_coco17.engine"
+    # engine_name = "ssd_mobilenet_v1_fpn_640x640_coco17.engine"
     PATH_TRT_MODEL_from_ONNX = os.path.join(DATA_REPO_DIR_FPN, "ONNX_Model/Repo", engine_name)
 else:
     engine_name = "ssd_mobilenet_v2_320x320_coco17_tpu-8_tf_v2.engine"
@@ -72,7 +74,7 @@ def verify_trt_model(path_model, model_type):
     test_op = False
 
     # boxes: [[x_min_object_box, y_min_object_box, x_max_object_box, y_max_object_box], []] for draw
-    boxes, confs, clss = trt_ssd.detect(img_handle, model_type, test_op, fpn=FPN, conf_th=0.5)
+    boxes, confs, clss = trt_ssd.detect(img_handle, model_type, test_op, fpn=FPN, conf_th=0.3)
     img_handle = vis.draw_bboxes(img_handle, boxes, confs, clss)
     cv2.imshow(WINDOW_NAME, img_handle)
     while True:
