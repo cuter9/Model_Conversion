@@ -575,7 +575,8 @@ def grid_anchor_gen_effnms(config):  # for anchor box used in TRT efficientNMP p
 # thus we leverage the multiscale_grid_anchor_generator in TF object_detection.anchor_generators to
 # generate the anchor boxes for inference
 # https://github.com/tensorflow/models/blob/master/research/object_detection/anchor_generators/multiscale_grid_anchor_generator.py#L30
-# the FPN model predicted target has no variance, so the variance should used to adjust the predict boxes is TRT NMS plugin
+# the FPN model predicted target has no variance, so the variance should be used to adjust the predict boxes is TRT NMS plugin,
+# but TRT efficientNMS plugin has no variance adjustment function
 def grid_anchor_gen(config):  # for anchor box used in TRT NMP plugin anchor boxes and their box variance
     from object_detection.anchor_generators import multiscale_grid_anchor_generator
 
