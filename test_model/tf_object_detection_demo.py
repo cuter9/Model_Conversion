@@ -68,7 +68,7 @@ MODELS = {'ssd_mobilenet_2': 'ssd_mobilenet_v2_320x320_coco17_tpu-8',       # go
           'centernet_mobilenet_v2': 'centernet_mobilenetv2fpn_512x512_coco17_od'}       # very worts
 
 
-model_display_name = 'ssd_mobilenet_4'  # @param
+model_display_name = 'ssd_mobilenet_3'  # @param
 model_name = MODELS[model_display_name]
 DATA_REPO_DIR = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion/test_tf_model")
 

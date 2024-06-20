@@ -59,7 +59,35 @@ def _postprocess_trt(img, out, conf_th, output_layout=7):
     return boxes, confs, clss
 
 
-def _postprocess_fpn_trt(img, output, conf_th):
+def _postprocess_fpn_trt(img, out, conf_th, output_layout=7):
+    """Postprocess TRT SSD output."""
+    output = out[0]
+    img_h, img_w, _ = img.shape
+    boxes, confs, clss = [], [], []
+    # # box CodeTypeSSD : TF_CENTER, https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-821/api/c_api/_nv_infer_plugin_utils_8h_source.html
+    # output :  [ ,class ID, confidence score, x_min_object_box, y_min_object_box, x_max_object_box, y_max_object_box,
+    #             , ....
+    #             ,class ID, confidence score, x_min_object_box, y_min_object_box, x_max_object_box, y_max_object_box,
+    #             , ....]
+    for prefix in range(0, len(output), output_layout):
+        if not output[1] < 0:
+            print("---- one detection ---- \n ", output[prefix: prefix + output_layout])
+        # index = int(output[prefix+0])
+        conf = float(output[prefix + 2])
+        if conf < conf_th:
+            continue
+        # the box coordinate arrange in TF v2 FPN model is [y1, x1, y2, x1] which is different from TF v1 model
+        x1 = int(output[prefix + 4] * img_w)
+        y1 = int(output[prefix + 3] * img_h)
+        x2 = int(output[prefix + 6] * img_w)
+        y2 = int(output[prefix + 5] * img_h)
+        cls = int(output[prefix + 1])
+        boxes.append((x1, y1, x2, y2))
+        confs.append(conf)
+        clss.append(cls)
+    return boxes, confs, clss
+
+def _postprocess_fpn_trt_enms(img, output, conf_th):        # using efficientNMS plugin
     """Postprocess TRT SSD output."""
     img_h, img_w, _ = img.shape
     boxes, confs, clss = output[1].tolist(), output[2].tolist(), output[3].tolist()

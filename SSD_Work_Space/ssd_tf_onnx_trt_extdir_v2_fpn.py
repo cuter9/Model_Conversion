@@ -27,10 +27,12 @@ FROZEN_GRAPH_NAME = 'saved_model.pb'        # for TF v2
 # Object Detection Model in TF V2 Model Zoo : https://github.com/tensorflow/models/tree/master/research/object_detection
 # MODEL_NAME = "ssd_mobilenet_v2_320x320_coco17_tpu-8"
 MODEL_NAME = "ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8"
+# MODEL_NAME = "ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8"
+
 
 # MODEL_TRT = "ssd_mobilenet_v2_320x320_coco17_tpu-8"
-# MODEL_TRT = "ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8"
 MODEL_TRT = "ssd_mobilenet_v2_fpnlite_320x320_coco17"
+# MODEL_TRT = "ssd_mobilenet_v2_fpnlite_640x640_coco17"
 
 WORK = os.getcwd()
 
@@ -296,28 +298,45 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
     node_priorbox_concat.outputs[0].dtype = np.float32
     '''
 
-    '''
+
     # reshape node_priorbox_concat from [1, 1, -1, 4] back to [1, 1, -1, 1]
+    '''
     nd_name_ga_trt = 'priorbox_concat_reshape'
     out_name_ga_trt = nd_name_ga_trt + '_output'
-    output_ga_trt = gs_onnx.Variable(name=out_name_ga_trt, dtype=np.float32)
-    shape_ga_trt = gs_onnx.Constant(name="priorbox_concat_shape", values=np.array([1, 2, -1, 1]))
-    node_priorbox_concat_reshape = gs_onnx.Node(op="Reshape", name=nd_name_ga_trt, attrs={"allowzero": 0},
-                                                inputs=[node_priorbox_concat.outputs[0], shape_ga_trt],
-                                                outputs=[output_ga_trt])
+
+    output_priorbox_concat_shape = gs_onnx.Variable(name="priorbox_concat_shape_output", dtype=np.float32)
+    node_priorbox_concat_reshape = gs_onnx.Node(op="Reshape", name="priorbox_concat_shape", attrs={"allowzero": 0},
+                                                inputs=[node_priorbox_concat.outputs[0], (1, 2, -1, 1)],
+                                                outputs=[output_priorbox_concat_shape])
     onnx_graph.nodes.append(node_priorbox_concat_reshape)
     '''
-    '''
-    node_boxconf_concat = [nd for nd in onnx_graph.nodes if nd.name == "boxconf_concat"][0]
+# reshape confidence of prediction class of boxes
+    node_boxconf_concat = [nd for nd in onnx_graph.nodes if nd.name == "concat_1"][0]
     node_boxconf_concat.outputs[0].dtype = np.float32
     for o in list(node_boxconf_concat.inputs):
         o.dtype = np.float32
 
-    node_boxloc_concat = [nd for nd in onnx_graph.nodes if nd.name == "boxloc_concat"][0]
+    output_boxcon_concat_reshape = gs_onnx.Variable(name="boxcon_concat_reshape_output", dtype=np.float32)
+    boxcon_shape = gs_onnx.Constant(values=np.array([1, -1, 1, 1]), name="boxcon_shape")
+    node_boxcon_concat_reshape = gs_onnx.Node(op="Reshape", name="boxcon_concat_reshape", attrs={"allowzero": 0},
+                                                inputs=[node_boxconf_concat.outputs[0], boxcon_shape],
+                                                outputs=[output_boxcon_concat_reshape])
+    onnx_graph.nodes.append(node_boxcon_concat_reshape)
+
+    # reshape confidence of prediction location of boxes
+    node_boxloc_concat = [nd for nd in onnx_graph.nodes if nd.name == "concat"][0]
     node_boxloc_concat.outputs[0].dtype = np.float32
     for o in list(node_boxloc_concat.inputs):
         o.dtype = np.float32
-    '''
+
+    output_boxloc_concat_reshape = gs_onnx.Variable(name="concat_concat_reshape_out", dtype=np.float32)
+    boxloc_shape = gs_onnx.Constant(values=np.array([1, -1, 1, 1]), name="boxloc_shape")
+    node_boxloc_concat_reshape = gs_onnx.Node(op="Reshape", name="concat_concat_reshape", attrs={"allowzero": 0},
+                                                inputs=[node_boxloc_concat.outputs[0], boxloc_shape],
+                                                outputs=[output_boxloc_concat_reshape])
+    onnx_graph.nodes.append(node_boxloc_concat_reshape)
+
+
     # node_boxloc_concat = [nd for nd in onnx_graph.nodes if nd.name == "concat"][0]
     # node_boxconf_concat = [nd for nd in onnx_graph.nodes if nd.name == "concat_1"][0]
 
@@ -348,11 +367,16 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
     # output_nms_1 = gs_onnx.Variable(name="detection_boxes", dtype=np.float32)
     # output_nms_2 = gs_onnx.Variable(name="detection_scores", dtype=np.float32)
     # output_nms_3 = gs_onnx.Variable(name="detection_classes", dtype=np.float32)
-    # node_NMS_TRT.inputs = [node_boxloc_concat.outputs[0],
-    #                       node_boxconf_concat.outputs[0],
+
+    node_NMS_TRT.inputs[0] = node_boxloc_concat_reshape.outputs[0]
+    node_NMS_TRT.inputs[2] = node_boxcon_concat_reshape.outputs[0]
     #                       node_priorbox_concat.outputs[0]]
-    #node_NMS_TRT.outputs = [output_nms_0, output_nms_1, output_nms_2, output_nms_3]
+
+    # node_NMS_TRT.outputs = [output_nms_0, output_nms_1, output_nms_2, output_nms_3]
     onnx_graph.outputs = node_NMS_TRT.outputs
+    # onnx_graph.outputs.append(node_boxcon_concat_reshape.outputs[0])
+    # onnx_graph.outputs.append(node_boxloc_concat_reshape.outputs[0])
+
 
     # onnx_graph.outputs = [output_boxloc_concat]
     # onnx_graph.outputs = [output_priorbox]

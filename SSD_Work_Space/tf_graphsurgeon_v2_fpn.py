@@ -9,16 +9,16 @@ import graphsurgeon as gs
 from Utils.ssd_utils_v2 import get_feature_map_shape, get_feature_map_shape_fpn, load_config
 from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
 
-def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
-                    onnx_work_dir=None, path_graph_pb=None, path_tf_custom_op=None):
 
+def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
+                            onnx_work_dir=None, path_graph_pb=None, path_tf_custom_op=None):
     config = load_config(os.path.join(path_tf_model, "pipeline.config"))
     ssd_config_path = os.path.join(onnx_work_dir, "ssd_config.txt")  # for storing static graph
     if os.path.isfile(ssd_config_path):
         subprocess.call(['rm', ssd_config_path])
     # subprocess.call(['mkdir', '-p', ssd_config_dir])
     with open(ssd_config_path, 'w') as f:
-        print(config, file = f)
+        print(config, file=f)
 
     # get input shape
     channels = 3
@@ -36,7 +36,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
 
     writer_s_0 = tf.summary.create_file_writer(tmp_tbdir_s_0)
     with writer_s_0.as_default():
-    #    tf.summary.graph(graph_def_spc)
+        #    tf.summary.graph(graph_def_spc)
         tf.summary.graph(g_def)
 
     # https://blog.tensorflow.org/2021/03/a-tour-of-savedmodel-signatures.html
@@ -48,7 +48,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     #    its control dependencies shall be removed, and
     #    the related model resources variables for concrete function shall be "frozen to constant".
     # https://medium.com/@sebastingarcaacosta/how-to-export-a-tensorflow-2-x-keras-model-to-a-frozen-and-optimized-graph-39740846d9eb
-    g_frozen = convert_variables_to_constants_v2(g_sig)     # freeze resources variables to constant
+    g_frozen = convert_variables_to_constants_v2(g_sig)  # freeze resources variables to constant
     g_frozen_def = g_frozen.graph.as_graph_def()
     # static_graph = gs.StaticGraph(g_frozen_def)
 
@@ -59,14 +59,16 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
 
     writer_s = tf.summary.create_file_writer(tmp_tbdir_s_1)
     with writer_s.as_default():
-    #    tf.summary.graph(graph_def_spc)
+        #    tf.summary.graph(graph_def_spc)
         tf.summary.graph(g_frozen_def)
 
     for nd in g_frozen_def.node:
-        if nd.name.split('/')[0] == 'StatefulPartitionedCall':  # remove the namespace used for 'StatefulPartitionedCall' operation
+        if nd.name.split('/')[
+            0] == 'StatefulPartitionedCall':  # remove the namespace used for 'StatefulPartitionedCall' operation
             nd.name = '/'.join(nd.name.split('/')[1:])
         for ndi in range(len(nd.input)):
-            if nd.input[ndi].split('/')[0] == 'StatefulPartitionedCall':   # remove the namespace 'StatefulPartitionedCall' of node input name            \
+            if nd.input[ndi].split('/')[
+                0] == 'StatefulPartitionedCall':  # remove the namespace 'StatefulPartitionedCall' of node input name            \
                 nd.input[ndi] = '/'.join(nd.input[ndi].split('/')[1:])
         ni = list(nd.input)
         for n in ni:
@@ -138,7 +140,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
 
     writer_s = tf.summary.create_file_writer(tmp_tbdir_s)
     with writer_s.as_default():
-    #    tf.summary.graph(graph_def_spc)
+        #    tf.summary.graph(graph_def_spc)
         tf.summary.graph(g_frozen_def)
 
     '''
@@ -205,8 +207,8 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     '''
     # dynamic_graph.forward_inputs(all_reshape_nodes)
 
-
-    tmp_tbdir_d_0 = os.path.join(onnx_work_dir, "tf_board_data_d_0")  # for storing dynamic graph before insert TRT plugins
+    tmp_tbdir_d_0 = os.path.join(onnx_work_dir,
+                                 "tf_board_data_d_0")  # for storing dynamic graph before insert TRT plugins
     if os.path.isdir(tmp_tbdir_d_0):
         subprocess.call(['rm', '-r', tmp_tbdir_d_0])
     subprocess.call(['mkdir', '-p', tmp_tbdir_d_0])
@@ -214,7 +216,6 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     writer_d_0 = tf.summary.create_file_writer(tmp_tbdir_d_0)
     with writer_d_0.as_default():
         tf.summary.graph(dynamic_graph.as_graph_def())
-
 
     '''
     tmp_tbdir_d = os.path.join(onnx_work_dir, "tf_board_data_d")  # for storing dynamic graph
@@ -226,7 +227,6 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     with writer_d.as_default():
         tf.summary.graph(dynamic_graph.as_graph_def())
     '''
-
 
     # create input plugin
     input_plugin = gs.create_node(
@@ -303,7 +303,6 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     dynamic_graph.append(priorbox_plugin_1)
     '''
 
-    '''
     # create nms plugin
     nms_config = config.model.ssd.post_processing.batch_non_max_suppression
     nms_plugin = gs.create_node(
@@ -317,16 +316,18 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         topK=nms_config.max_detections_per_class,
         keepTopK=nms_config.max_total_detections,
         numClasses=config.model.ssd.num_classes + 1,  # add background class
-        inputOrder=[1, 2, 0],  # [1, 2, 0]
+        inputOrder=[0, 2, 1],  # [1, 2, 0]
         #        inputOrder=[0, 1, 2],  # [1, 2, 0]
         confSigmoid=1,
         isNormalized=1,
         # scoreConverter="SIGMOID",
         scoreBits=16,
         isBatchAgnostic=1,
-        codeType=1)     # box CodeTypeSSD : 1 = CORNER, https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-821/api/c_api/_nv_infer_plugin_utils_8h_source.html
-        # codeType = 3)  # box CodeTypeSSD : 3 = TF_CENTER, https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-821/api/c_api/_nv_infer_plugin_utils_8h_source.html
+        codeType=1)  # box CodeTypeSSD : 1 = CORNER, https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-821/api/c_api/_nv_infer_plugin_utils_8h_source.html
+    # codeType = 3)  # box CodeTypeSSD : 3 = TF_CENTER, https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-821/api/c_api/_nv_infer_plugin_utils_8h_source.html
+
     '''
+    
     nms_config = config.model.ssd.post_processing.batch_non_max_suppression
     nms_plugin = gs.create_node(
         name=output_name,
@@ -336,10 +337,10 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         iou_threshold=nms_config.iou_threshold,     # The scalar threshold for IOU
         max_detections_per_class=nms_config.max_detections_per_class,
         max_output_boxes=nms_config.max_total_detections,
-        class_agnostic=1,      # Set to true to do class-independent NMS
+        class_agnostic=0,      # Set to true to do class-independent NMS
         score_activation=1,        # Set to true to apply sigmoid activation
         box_coding=0)     #  0 = BoxCorner, 1 = BoxCenterSize, https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-821/api/c_api/_nv_infer_plugin_utils_8h_source.html
-
+    '''
     # dynamic_graph.append(nms_plugin)
 
     '''
@@ -357,9 +358,9 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         "priorbox_concat_1", op="Concat_TRT", N=1, dtype=tf.float32, axis=2)
     priorbox_concat_plugin_1.input.extend(["priorbox_1"])
     '''
+    # using Constant node instead of using TRT AnchorGrid generator
+    # which is not compatible with the Anchor Box used in FPN model
     grid_anchor_list, grid_anchor_tensor = grid_anchor_gen(config)
-    # g = tf.make_tensor_proto(grid_anchor_tensor, dtype=tf.float32)
-    # a = np.asarray([[1.0], [1.0]], dtype=np.float32)
     priorbox_concat_plugin = gs.create_node(
         name="priorbox_concat",
         op="Const",
@@ -393,7 +394,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     )
     '''
     # nms_plugin.input.extend(["boxloc_concat", "boxconf_concat", "priorbox_concat"])
-    nms_plugin.input.extend(["concat", "concat_1", "priorbox_concat"])
+    # nms_plugin.input.extend(["concat", "concat_1", "priorbox_concat"])
     # dynamic_graph.append(nms_plugin)
 
     # create output plugin
@@ -410,16 +411,16 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     # transform (map) tf namespace to trt namespace --> tf namespace : trt namespace
     # the collapse_namespaces method will append a new node, thus append the node will duplicate
     namespace_plugin_map = {
-#        "MultiscaleGridAnchorGenerator": priorbox_concat_plugin,
+        "MultiscaleGridAnchorGenerator": priorbox_concat_plugin,
         "Postprocessor": nms_plugin,
         "Preprocessor": input_plugin,
         "Cast": input_plugin,
         "input_tensor": input_plugin,
         "image_tensor": input_plugin,
         "Concatenate": priorbox_concat_plugin,
-#        "Squeeze": squeeze_plugin,
-#        "concat": boxloc_concat_plugin,
-#        "concat_1": boxconf_concat_plugin
+        #        "Squeeze": squeeze_plugin,
+        #        "concat": boxloc_concat_plugin,
+        #        "concat_1": boxconf_concat_plugin
     }
 
     dynamic_graph.collapse_namespaces(namespace_plugin_map)
@@ -429,7 +430,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         "add",
         "add/y",
         "Cast_1",
-#        "ToFloat",
+        #        "ToFloat",
         "Identity",
         "Identity_1",
         "Identity_2",
@@ -445,7 +446,6 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     dynamic_graph.remove(
         dynamic_graph.find_nodes_by_path(namespace_remove), remove_exclusive_dependencies=False)
 
-    '''
     # fix name and draw out the graph input from the input to the NMS_TRT node (output node)
     for n in range(len(dynamic_graph.find_nodes_by_op('NMS_TRT'))):
         for i, name in enumerate(
@@ -459,14 +459,14 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
                 dynamic_graph.find_nodes_by_op('EfficientNMS_TRT')[n].input):
             if input_name in name:
                 dynamic_graph.find_nodes_by_op('EfficientNMS_TRT')[n].input.pop(i)
-
+    '''
     # remove all inputs to the node GridAnchor_TRT which needs no input
     # for n in range(len(dynamic_graph.find_nodes_by_op('GridAnchor_TRT'))):
-#    nd_priorbox = dynamic_graph.find_nodes_by_op('GridAnchor_TRT')[0]
-#    # nd_priorbox.input.clear()
-#    lst_input = list(nd_priorbox.input)
-#    for ni in lst_input:
-#        nd_priorbox.input.remove(ni)
+    #    nd_priorbox = dynamic_graph.find_nodes_by_op('GridAnchor_TRT')[0]
+    #    # nd_priorbox.input.clear()
+    #    lst_input = list(nd_priorbox.input)
+    #    for ni in lst_input:
+    #        nd_priorbox.input.remove(ni)
 
     nd_cant = dynamic_graph.find_nodes_by_name('priorbox_concat')[0]
     nd_cand_input = list(nd_cant.input)
@@ -478,7 +478,8 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     for key, node in node_map.items():
         if 'MultiscaleGridAnchorGenerator' in key.split('/'):
             nd_mgag.append(node)
-            if "strided" in key.split('/')[-1].split('_')[0]:   # remove the unknown_X const node in MultiscaleGridAnchorGenerator
+            if "strided" in key.split('/')[-1].split('_')[
+                0]:  # remove the unknown_X const node in MultiscaleGridAnchorGenerator
                 ni = node.input
                 for n in ni:
                     if n.split("_")[0] == "unknown":
@@ -511,7 +512,6 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     print('---- the graphsurgeon tf ssd completed ----', '\n',
           '---- store the surged tf model to ', path_graph_pb, 'for onnx conversion ---- \n')
 
-
     # dynamic_graph.write_tensorboard(tmp_tbdir_d)
     # dynamic_graph.write(path_graph_pb)  # store the surged tf model
     tmp_tbdir_d = os.path.join(onnx_work_dir, "tf_board_data_d")  # for storing dynamic graph
@@ -538,7 +538,8 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
 
     return input_name, output_name, path_tf_custom_op
 
-def grid_anchor_gen(config):
+
+def grid_anchor_gen_effnms(config):  # for anchor box used in TRT efficientNMP plugin
     from object_detection.anchor_generators import multiscale_grid_anchor_generator
 
     anchor_generator_config = config.model.ssd.anchor_generator.multiscale_anchor_generator
@@ -569,6 +570,63 @@ def grid_anchor_gen(config):
     grid_anchor_tensor_0 = np.concatenate(grid_anchor_list_reshape, 1)
     grid_anchor_tensor = grid_anchor_tensor_0.astype(np.float32)
     return grid_anchor_list, grid_anchor_tensor
+
+# FPN model use Multiscale Grid Anchor,
+# thus we leverage the multiscale_grid_anchor_generator in TF object_detection.anchor_generators to
+# generate the anchor boxes for inference
+# https://github.com/tensorflow/models/blob/master/research/object_detection/anchor_generators/multiscale_grid_anchor_generator.py#L30
+# the FPN model predicted target has no variance, so the variance should used to adjust the predict boxes is TRT NMS plugin
+def grid_anchor_gen(config):  # for anchor box used in TRT NMP plugin anchor boxes and their box variance
+    from object_detection.anchor_generators import multiscale_grid_anchor_generator
+
+    anchor_generator_config = config.model.ssd.anchor_generator.multiscale_anchor_generator
+    # num_layers = anchor_generator_config.max_level - anchor_generator_config.min_level + 1
+    min_level = anchor_generator_config.min_level
+    max_level = anchor_generator_config.max_level
+    anchor_scale = anchor_generator_config.anchor_scale
+    scales_per_octave = anchor_generator_config.scales_per_octave
+    aspect_ratios = anchor_generator_config.aspect_ratios
+    # create anchor grid generator
+    grid_gen = multiscale_grid_anchor_generator.MultiscaleGridAnchorGenerator(min_level,
+                                                                              max_level,
+                                                                              anchor_scale,
+                                                                              aspect_ratios,
+                                                                              scales_per_octave)
+
+    feature_map_shapes = [(h, h) for h in get_feature_map_shape_fpn(config)]    # for each layer: eg. [40*40, 20*20, 10*10, 5*5, 3*3]
+    height = config.model.ssd.image_resizer.fixed_shape_resizer.height
+    width = config.model.ssd.image_resizer.fixed_shape_resizer.width
+
+    # generate grid anchor boxes scale using generator grid_gen(), which will give a list of grid anchors boxes for each feature layer
+    grid_anchor_list = grid_gen._generate(feature_map_shapes, im_height=height, im_width=width)
+
+    #
+    grid_anchor_list_reshape = []
+    for g in grid_anchor_list:
+        b = tf.convert_to_tensor(
+            np.expand_dims(g.data['boxes'].numpy(), axis=0))  # g.data['boxes'] has shape = [no of grid, 4], e.g no of grid = 40*40 for first feat layer
+        grid_anchor_list_reshape.append(b)
+    # grid_anchor_list_reshape has expaned shape, eg. [[1, 40*40, 4], [1, 20*20, 4], [1, 10*10, 4], 1, 5*5, 4], [1, 3*3, 4]]
+    # anchor grid shape should has shape [1, 2, numPriors * 4, 1]
+    grid_anchor_tensor_0 = np.concatenate(grid_anchor_list_reshape, axis=1)     # [1, (40*40 + 20*20 + 10*10 + 5*5 + 3*3), 4]
+    gar = np.reshape(grid_anchor_tensor_0, newshape=[1, -1, 1])     # [1, (40*40 + 20*20 + 10*10 + 5*5 + 3*3) * 4, 1]
+
+    # boxes variance generation has the same shape as grid_anchor_tensor_0
+    box_coder_config = config.model.ssd.box_coder.faster_rcnn_box_coder
+    variance = np.asarray([[
+        1.0 / box_coder_config.y_scale,
+        1.0 / box_coder_config.x_scale,
+        1.0 / box_coder_config.height_scale,
+        1.0 / box_coder_config.width_scale
+    ]])
+    v = np.expand_dims(np.repeat(variance, grid_anchor_tensor_0.shape[1], axis=0), axis=0)
+    var = np.reshape(v, newshape=[1, -1, 1])    # reshape to the shape as gar
+
+    grid_anchor_tensor_1 = np.expand_dims(np.vstack((gar, var)), axis=0)    # stack grid anchor boxes and their variance
+    grid_anchor_tensor = np.copy(grid_anchor_tensor_1.astype(np.float32))
+    return grid_anchor_list, grid_anchor_tensor
+
+
 def grid_anchor_gen_1(config):
     anchor_generator_config = config.model.ssd.anchor_generator.multiscale_anchor_generator
     box_coder_config = config.model.ssd.box_coder.faster_rcnn_box_coder
@@ -580,10 +638,16 @@ def grid_anchor_gen_1(config):
     aspect_ratios = list(anchor_generator_config.aspect_ratios)
     # aspect_ratios.reverse()
     feature_map_shapes = get_feature_map_shape_fpn(config)
-    grid_size = [2 ** bs for bs in range(anchor_generator_config.min_level, anchor_generator_config.max_level+1)]
+    grid_size = [2 ** bs for bs in range(anchor_generator_config.min_level, anchor_generator_config.max_level + 1)]
     base_anchor_size = anchor_scale * np.asarray(grid_size)
-    anchor_height = np.asarray([[np.asarray(spo) * bar * np.sqrt(ar) for ar in aspect_ratios] for bar in base_anchor_size])
-    anchor_width = np.asarray([[np.asarray(spo) * bar / np.sqrt(ar) for ar in aspect_ratios] for bar in base_anchor_size])
-    anchor_center_x = [np.asarray([np.ones(len(spo) * len(aspect_ratios)) * (g + 0.5) * np.asarray(gsize) for g in range(fms)]) for fms, gsize in zip(feature_map_shapes, grid_size)]
-    anchor_center_y = [np.asarray([np.ones(len(spo) * len(aspect_ratios)) * (g + 0.5) * np.asarray(gsize) for g in range(fms)]) for fms, gsize in zip(feature_map_shapes, grid_size)]
+    anchor_height = np.asarray(
+        [[np.asarray(spo) * bar * np.sqrt(ar) for ar in aspect_ratios] for bar in base_anchor_size])
+    anchor_width = np.asarray(
+        [[np.asarray(spo) * bar / np.sqrt(ar) for ar in aspect_ratios] for bar in base_anchor_size])
+    anchor_center_x = [
+        np.asarray([np.ones(len(spo) * len(aspect_ratios)) * (g + 0.5) * np.asarray(gsize) for g in range(fms)]) for
+        fms, gsize in zip(feature_map_shapes, grid_size)]
+    anchor_center_y = [
+        np.asarray([np.ones(len(spo) * len(aspect_ratios)) * (g + 0.5) * np.asarray(gsize) for g in range(fms)]) for
+        fms, gsize in zip(feature_map_shapes, grid_size)]
     return [anchor_height, anchor_width, anchor_center_x, anchor_center_y]
