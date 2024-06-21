@@ -331,7 +331,7 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
     for o in list(node_boxloc_concat.inputs):
         o.dtype = np.float32
 
-    output_boxloc_concat_reshape = gs_onnx.Variable(name=" ", dtype=np.float32)
+    output_boxloc_concat_reshape = gs_onnx.Variable(name="boxloc_concat_reshape_output", dtype=np.float32)
     boxloc_shape = gs_onnx.Constant(values=np.array([1, -1, 1, 1]), name="boxloc_shape")
     node_boxloc_concat_reshape = gs_onnx.Node(op="Reshape", name="boxloc_concat_reshape", attrs={"allowzero": 0},
                                               inputs=[node_boxloc_concat.outputs[0], boxloc_shape],
@@ -375,8 +375,8 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
 
     # node_NMS_TRT.outputs = [output_nms_0, output_nms_1, output_nms_2, output_nms_3]
     onnx_graph.outputs = node_NMS_TRT.outputs
-    onnx_graph.outputs.append(node_boxcon_concat_reshape.outputs[0])
-    onnx_graph.outputs.append(node_boxloc_concat_reshape.outputs[0])
+    # onnx_graph.outputs.append(node_boxcon_concat_reshape.outputs[0])
+    # onnx_graph.outputs.append(node_boxloc_concat_reshape.outputs[0])
 
     # onnx_graph.outputs = [output_boxloc_concat]
     # onnx_graph.outputs = [output_priorbox]
