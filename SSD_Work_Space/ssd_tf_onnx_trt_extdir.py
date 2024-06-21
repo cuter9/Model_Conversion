@@ -24,7 +24,7 @@ MODEL_TRT = "ssd_mobilenet_v2_coco"
 WORK = os.getcwd()
 
 # DATA_REPO_DIR = os.path.join("../../", "Data_Repo/Model_Conversion//SSD_mobilenet")
-DATA_REPO_DIR = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion//SSD_mobilenet")
+DATA_REPO_DIR = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion/SSD_mobilenet")
 os.makedirs(DATA_REPO_DIR, exist_ok=True)
 
 ONNX_WORK_SPACE = os.path.join(DATA_REPO_DIR, "ONNX_Model")

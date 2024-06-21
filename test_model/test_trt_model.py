@@ -19,8 +19,10 @@ WORK = os.getcwd()
 
 DATA_REPO_DIR = os.path.join(os.environ["HOME"], "Data_Repo/Model_Conversion/SSD_mobilenet")
 # DATA_REPO_DIR_FPN = os.path.join(os.environ["HOME"], "Data_Repo/Model_Conversion/ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8")
-DATA_REPO_DIR_FPN = os.path.join(os.environ["HOME"], "Data_Repo/Model_Conversion/ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8")
+# DATA_REPO_DIR_FPN = os.path.join(os.environ["HOME"], "Data_Repo/Model_Conversion/ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8")
 # DATA_REPO_DIR_FPN = os.path.join(os.environ["HOME"], "Data_Repo/Model_Conversion/ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8")
+DATA_REPO_DIR_FPN = os.path.join(os.environ["HOME"], "Data_Repo/Model_Conversion/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8")
+
 TEST_DIR = os.path.join(DATA_REPO_DIR, "Test Data")
 
 if os.path.isdir(TEST_DIR):
@@ -35,8 +37,9 @@ FPN = True
 # engine_name = "ssd_mobilenet_v2_coco.engine"
 if FPN:
     # engine_name = "ssd_mobilenet_v2_fpnlite_320x320_coco17.engine"
-    engine_name = "ssd_mobilenet_v2_fpnlite_640x640_coco17.engine"
+    #engine_name = "ssd_mobilenet_v2_fpnlite_640x640_coco17.engine"
     # engine_name = "ssd_mobilenet_v1_fpn_640x640_coco17.engine"
+    engine_name = "ssd_resnet50_v1_fpn_640x640_coco17.engine"
     PATH_TRT_MODEL_from_ONNX = os.path.join(DATA_REPO_DIR_FPN, "ONNX_Model/Repo", engine_name)
 else:
     engine_name = "ssd_mobilenet_v2_320x320_coco17_tpu-8_tf_v2.engine"

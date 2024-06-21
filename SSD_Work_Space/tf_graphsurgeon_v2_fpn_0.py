@@ -413,7 +413,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     namespace_plugin_map = {
         "MultiscaleGridAnchorGenerator": priorbox_concat_plugin,
         "Postprocessor": nms_plugin,
-#        "Preprocessor": input_plugin,
+        "Preprocessor": input_plugin,
         "Cast": input_plugin,
         "input_tensor": input_plugin,
         "image_tensor": input_plugin,
@@ -439,8 +439,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         "Identity_5",
         "Identity_6",
         "Identity_7",
-#        "Preprocessor",
-        "Preprocessor/stack_1",
+        "Preprocessor",
         "MultiscaleGridAnchorGenerator"
     }
 
@@ -527,7 +526,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     print('---- start onnx conversion with surged tf model ----')
 
     input_name = [input_name + ":0"]
-    output_name = [output_name + ":0"]
+    output_name = [output_name + ":0", output_name + ":1", output_name + ":2", output_name + ":3"]
     # input_name = [input_name]
     # output_name = [output_name]
 
