@@ -26,16 +26,16 @@ FROZEN_GRAPH_NAME = 'saved_model.pb'  # for TF v2
 
 # Object Detection Model in TF V2 Model Zoo : https://github.com/tensorflow/models/tree/master/research/object_detection
 # MODEL_NAME = "ssd_mobilenet_v2_320x320_coco17_tpu-8"
-# MODEL_NAME = "ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8"
+MODEL_NAME = "ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8"
 # MODEL_NAME = "ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8"
 # MODEL_NAME = "ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8"
-MODEL_NAME = "ssd_resnet50_v1_fpn_640x640_coco17_tpu-8"
+# MODEL_NAME = "ssd_resnet50_v1_fpn_640x640_coco17_tpu-8"
 
 # MODEL_TRT = "ssd_mobilenet_v2_320x320_coco17_tpu-8"
-# MODEL_TRT = "ssd_mobilenet_v2_fpnlite_320x320_coco17"
+MODEL_TRT = "ssd_mobilenet_v2_fpnlite_320x320_coco17"
 # MODEL_TRT = "ssd_mobilenet_v2_fpnlite_640x640_coco17"
 # MODEL_TRT = "ssd_mobilenet_v1_fpn_640x640_coco17"
-MODEL_TRT = "ssd_resnet50_v1_fpn_640x640_coco17"
+# MODEL_TRT = "ssd_resnet50_v1_fpn_640x640_coco17"
 
 WORK = os.getcwd()
 
@@ -70,7 +70,7 @@ os.environ['MODEL_REPO_DIR'] = MODEL_REPO_DIR
 
 
 def ssd_pipeline_to_onnx(checkpoint_path, config_path,
-                         path_graph_pb, path_onnx_model, path_onnx_model_1, tmp_dir=TMP_MODEL):
+                         path_graph_pb, path_onnx_model, tmp_dir=TMP_MODEL):
     print('---- start converting tf ssd to onnx model ----')
     print('---- start graphsurgeon tf ssd for onnx model conversion----')
 
@@ -534,9 +534,9 @@ if __name__ == '__main__':
 
     path_graph_pb = os.path.join(MODEL_REPO_DIR, TMP_PB_GRAPH_NAME)
     path_onnx_model = os.path.join(MODEL_REPO_DIR, MODEL_NAME + ".onnx")
-    path_onnx_model_1 = os.path.join(MODEL_REPO_DIR, MODEL_NAME + "_1.onnx")
+    # path_onnx_model_1 = os.path.join(MODEL_REPO_DIR, MODEL_NAME + "_1.onnx")
     ssd_pipeline_to_onnx(checkpoint_path, config_path,
-                         path_graph_pb, path_onnx_model, path_onnx_model_1, tmp_dir=TMP_MODEL)
+                         path_graph_pb, path_onnx_model, tmp_dir=TMP_MODEL)
 
     # path_onnx_model = os.path.join(MODEL_REPO_DIR, MODEL_NAME + ".onnx")
     # onnx.save_model(onnx_model_proto, path_onnx_model)

@@ -63,12 +63,13 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         tf.summary.graph(g_frozen_def)
 
     for nd in g_frozen_def.node:
-        if nd.name.split('/')[
-            0] == 'StatefulPartitionedCall':  # remove the namespace used for 'StatefulPartitionedCall' operation
+        # remove the namespace used for 'StatefulPartitionedCall' operation
+        if nd.name.split('/')[0] == 'StatefulPartitionedCall':
             nd.name = '/'.join(nd.name.split('/')[1:])
         for ndi in range(len(nd.input)):
+            # remove the namespace 'StatefulPartitionedCall' of node input name
             if nd.input[ndi].split('/')[
-                0] == 'StatefulPartitionedCall':  # remove the namespace 'StatefulPartitionedCall' of node input name            \
+                0] == 'StatefulPartitionedCall':              \
                 nd.input[ndi] = '/'.join(nd.input[ndi].split('/')[1:])
         ni = list(nd.input)
         for n in ni:
@@ -76,22 +77,6 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
             if list(n)[0] == '^':  # remove the control dependence input (which has "^" in the name string)
                 nd.input.remove(n)
 
-    '''
-    s = []
-    for n in g_freezen_gdef.node:
-        if 'StatefulPartitionedCall' in n.name.split('/'):
-            n.name = '/'.join(n.name.split('/')[1:])
- 
-        for ni in range(len(n.input)):
-            if 'StatefulPartitionedCall' in n.input[ni].split('/'):
-                n.input[ni] = '/'.join(n.input[ni].split('/'))
-
-        # for no in n.output:
-        #    if 'StatefulPartitionedCall' in no.split('/'):
-        #        no = '/'.join(no.split('/')[1:])
-
-        s.append(n)
-    '''
     '''
     g = g_serving.graph
     g_def = g.as_graph_def()
@@ -117,7 +102,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     var_shape = [v.handle._handle_data.shape_and_type[0].shape for v in g.variables]
     assert g_cap_shape == var_shape, 'captures is not the same as variables'
 
-    # Convert a FunctionDef used in the TF v2 ssd model to a GraphDefTF
+    # Convert a FunctionDef used in the TF v2 ssd model to a GraphDef TF
     # https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/framework/function_def_to_graph.py
     spc = dynamic_graph.find_nodes_by_op('StatefulPartitionedCall')
     spc_func_name = spc[0].attr['f'].func.name
@@ -310,6 +295,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         op="NMS_TRT",
         shareLocation=1,
         varianceEncodedInTarget=0,
+        # If the predicted boxes of model has encoded variance, set to False NOT to adjust the predicted boxes.
         backgroundLabelId=0,
         confidenceThreshold=nms_config.score_threshold,
         nmsThreshold=nms_config.iou_threshold,
@@ -318,9 +304,9 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         numClasses=config.model.ssd.num_classes + 1,  # add background class
         inputOrder=[0, 2, 1],  # [1, 2, 0]
         #        inputOrder=[0, 1, 2],  # [1, 2, 0]
-        confSigmoid=1,
+        confSigmoid=1,  # use "SIGMOID" for class confidence prediction output
         isNormalized=1,
-        # scoreConverter="SIGMOID",
+        # scoreConverter=,
         scoreBits=16,
         isBatchAgnostic=1,
         codeType=1)  # box CodeTypeSSD : 1 = CORNER, https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-821/api/c_api/_nv_infer_plugin_utils_8h_source.html
@@ -413,7 +399,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     namespace_plugin_map = {
         "MultiscaleGridAnchorGenerator": priorbox_concat_plugin,
         "Postprocessor": nms_plugin,
-#        "Preprocessor": input_plugin,
+        #        "Preprocessor": input_plugin,
         "Cast": input_plugin,
         "input_tensor": input_plugin,
         "image_tensor": input_plugin,
@@ -439,7 +425,8 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         "Identity_5",
         "Identity_6",
         "Identity_7",
-#        "Preprocessor",
+        # the embedded preprocess is different in TF diffenent model keep it to prevent the additional input image preorocess cause error
+        # "Preprocessor",
         "Preprocessor/stack_1",
         "MultiscaleGridAnchorGenerator"
     }
@@ -572,6 +559,7 @@ def grid_anchor_gen_effnms(config):  # for anchor box used in TRT efficientNMP p
     grid_anchor_tensor = grid_anchor_tensor_0.astype(np.float32)
     return grid_anchor_list, grid_anchor_tensor
 
+
 # FPN model use Multiscale Grid Anchor,
 # thus we leverage the multiscale_grid_anchor_generator in TF object_detection.anchor_generators to
 # generate the anchor boxes for inference
@@ -595,7 +583,8 @@ def grid_anchor_gen(config):  # for anchor box used in TRT NMP plugin anchor box
                                                                               aspect_ratios,
                                                                               scales_per_octave)
 
-    feature_map_shapes = [(h, h) for h in get_feature_map_shape_fpn(config)]    # for each layer: eg. [40*40, 20*20, 10*10, 5*5, 3*3]
+    feature_map_shapes = [(h, h) for h in
+                          get_feature_map_shape_fpn(config)]  # for each layer: eg. [40*40, 20*20, 10*10, 5*5, 3*3]
     height = config.model.ssd.image_resizer.fixed_shape_resizer.height
     width = config.model.ssd.image_resizer.fixed_shape_resizer.width
 
@@ -606,12 +595,14 @@ def grid_anchor_gen(config):  # for anchor box used in TRT NMP plugin anchor box
     grid_anchor_list_reshape = []
     for g in grid_anchor_list:
         b = tf.convert_to_tensor(
-            np.expand_dims(g.data['boxes'].numpy(), axis=0))  # g.data['boxes'] has shape = [no of grid, 4], e.g no of grid = 40*40 for first feat layer
+            np.expand_dims(g.data['boxes'].numpy(),
+                           axis=0))  # g.data['boxes'] has shape = [no of grid, 4], e.g no of grid = 40*40 for first feat layer
         grid_anchor_list_reshape.append(b)
     # grid_anchor_list_reshape has expaned shape, eg. [[1, 40*40, 4], [1, 20*20, 4], [1, 10*10, 4], 1, 5*5, 4], [1, 3*3, 4]]
     # anchor grid shape should has shape [1, 2, numPriors * 4, 1]
-    grid_anchor_tensor_0 = np.concatenate(grid_anchor_list_reshape, axis=1)     # [1, (40*40 + 20*20 + 10*10 + 5*5 + 3*3), 4]
-    gar = np.reshape(grid_anchor_tensor_0, newshape=[1, -1, 1])     # [1, (40*40 + 20*20 + 10*10 + 5*5 + 3*3) * 4, 1]
+    grid_anchor_tensor_0 = np.concatenate(grid_anchor_list_reshape,
+                                          axis=1)  # [1, (40*40 + 20*20 + 10*10 + 5*5 + 3*3), 4]
+    gar = np.reshape(grid_anchor_tensor_0, newshape=[1, -1, 1])  # [1, (40*40 + 20*20 + 10*10 + 5*5 + 3*3) * 4, 1]
 
     # boxes variance generation has the same shape as grid_anchor_tensor_0
     box_coder_config = config.model.ssd.box_coder.faster_rcnn_box_coder
@@ -622,9 +613,9 @@ def grid_anchor_gen(config):  # for anchor box used in TRT NMP plugin anchor box
         1.0 / box_coder_config.width_scale
     ]])
     v = np.expand_dims(np.repeat(variance, grid_anchor_tensor_0.shape[1], axis=0), axis=0)
-    var = np.reshape(v, newshape=[1, -1, 1])    # reshape to the shape as gar
+    var = np.reshape(v, newshape=[1, -1, 1])  # reshape to the shape as gar
 
-    grid_anchor_tensor_1 = np.expand_dims(np.vstack((gar, var)), axis=0)    # stack grid anchor boxes and their variance
+    grid_anchor_tensor_1 = np.expand_dims(np.vstack((gar, var)), axis=0)  # stack grid anchor boxes and their variance
     grid_anchor_tensor = np.copy(grid_anchor_tensor_1.astype(np.float32))
     return grid_anchor_list, grid_anchor_tensor
 
