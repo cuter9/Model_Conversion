@@ -21,21 +21,25 @@ TRT_OUTPUT_NAME = 'nms'
 # FROZEN_GRAPH_NAME = 'frozen_inference_graph.pb'   # for TF v1
 FROZEN_GRAPH_NAME = 'saved_model.pb'  # for TF v2
 
+# TF v1 model
 # MODEL_NAME = "ssd_mobilenet_v1_coco_2018_01_28"
-# MODEL_NAME = "ssd_mobilenet_v2_coco_2018_03_29"     # tf v1 model
+# MODEL_NAME = "ssd_mobilenet_v2_coco_2018_03_29"
 
-# Object Detection Model in TF V2 Model Zoo : https://github.com/tensorflow/models/tree/master/research/object_detection
-# MODEL_NAME = "ssd_mobilenet_v2_320x320_coco17_tpu-8"
-MODEL_NAME = "ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8"
+# Object Detection Model in TF V2 Model Zoo :
+# https://github.com/tensorflow/models/tree/master/research/object_detection
+# MODEL_NAME = "ssd_mobilenet_v2_320x320_coco17_tpu-8"      # use ssd_tf_onnx_trt_extdir_v2.py to convert model
+# MODEL_NAME = "ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8"
 # MODEL_NAME = "ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8"
 # MODEL_NAME = "ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8"
 # MODEL_NAME = "ssd_resnet50_v1_fpn_640x640_coco17_tpu-8"
+MODEL_NAME = "ssd_resnet152_v1_fpn_640x640_coco17_tpu-8"
 
 # MODEL_TRT = "ssd_mobilenet_v2_320x320_coco17_tpu-8"
-MODEL_TRT = "ssd_mobilenet_v2_fpnlite_320x320_coco17"
+# MODEL_TRT = "ssd_mobilenet_v2_fpnlite_320x320_coco17"
 # MODEL_TRT = "ssd_mobilenet_v2_fpnlite_640x640_coco17"
 # MODEL_TRT = "ssd_mobilenet_v1_fpn_640x640_coco17"
-# MODEL_TRT = "ssd_resnet50_v1_fpn_640x640_coco17"
+# # MODEL_TRT = "ssd_resnet50_v1_fpn_640x640_coco17"
+MODEL_TRT = "ssd_resnet152_v1_fpn_640x640_coco17"
 
 WORK = os.getcwd()
 

@@ -195,7 +195,7 @@ class TrtSSD(object):
         del self.cuda_inputs
         del self.stream
 
-    def detect(self, img, model_type, test_op, fpn=False, conf_th=0.3):
+    def detect(self, img, model_type, test_op, fpn=False, conf_th=0.5):
         """Detect objects in the input image."""
         img_resized = _preprocess_trt(img, self.input_shape, model_type)
         np.copyto(self.host_inputs[0], img_resized.ravel())

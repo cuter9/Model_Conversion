@@ -9,6 +9,8 @@ import graphsurgeon as gs
 from Utils.ssd_utils_v2 import get_feature_map_shape, get_feature_map_shape_fpn, load_config
 from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
 
+FOR_TENSORBOARD = False
+
 
 def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
                             onnx_work_dir=None, path_graph_pb=None, path_tf_custom_op=None):
@@ -29,15 +31,16 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     g_sig = saved_model.signatures["serving_default"]  # creat tf Graph objects
     g_def = g_sig.graph.as_graph_def()
 
-    tmp_tbdir_s_0 = os.path.join(onnx_work_dir, "tf_board_data_s_0")  # for storing static graph before frozen
-    if os.path.isdir(tmp_tbdir_s_0):
-        subprocess.call(['rm', '-r', tmp_tbdir_s_0])
-    subprocess.call(['mkdir', '-p', tmp_tbdir_s_0])
+    if FOR_TENSORBOARD:
+        tmp_tbdir_s_0 = os.path.join(onnx_work_dir, "tf_board_data_s_0")  # for storing static graph before frozen
+        if os.path.isdir(tmp_tbdir_s_0):
+            subprocess.call(['rm', '-r', tmp_tbdir_s_0])
+        subprocess.call(['mkdir', '-p', tmp_tbdir_s_0])
 
-    writer_s_0 = tf.summary.create_file_writer(tmp_tbdir_s_0)
-    with writer_s_0.as_default():
-        #    tf.summary.graph(graph_def_spc)
-        tf.summary.graph(g_def)
+        writer_s_0 = tf.summary.create_file_writer(tmp_tbdir_s_0)
+        with writer_s_0.as_default():
+            #    tf.summary.graph(graph_def_spc)
+            tf.summary.graph(g_def)
 
     # https://blog.tensorflow.org/2021/03/a-tour-of-savedmodel-signatures.html
     # 1. In TF Version>2.0,model is excuted with "graph function" with specified "signature", rather than graph definition as in TF V1.X,
@@ -52,15 +55,16 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     g_frozen_def = g_frozen.graph.as_graph_def()
     # static_graph = gs.StaticGraph(g_frozen_def)
 
-    tmp_tbdir_s_1 = os.path.join(onnx_work_dir, "tf_board_data_s_1")  # for storing static graph after frozen
-    if os.path.isdir(tmp_tbdir_s_1):
-        subprocess.call(['rm', '-r', tmp_tbdir_s_1])
-    subprocess.call(['mkdir', '-p', tmp_tbdir_s_1])
+    if FOR_TENSORBOARD:
+        tmp_tbdir_s_1 = os.path.join(onnx_work_dir, "tf_board_data_s_1")  # for storing static graph after frozen
+        if os.path.isdir(tmp_tbdir_s_1):
+            subprocess.call(['rm', '-r', tmp_tbdir_s_1])
+        subprocess.call(['mkdir', '-p', tmp_tbdir_s_1])
 
-    writer_s = tf.summary.create_file_writer(tmp_tbdir_s_1)
-    with writer_s.as_default():
-        #    tf.summary.graph(graph_def_spc)
-        tf.summary.graph(g_frozen_def)
+        writer_s = tf.summary.create_file_writer(tmp_tbdir_s_1)
+        with writer_s.as_default():
+            #    tf.summary.graph(graph_def_spc)
+            tf.summary.graph(g_frozen_def)
 
     for nd in g_frozen_def.node:
         # remove the namespace used for 'StatefulPartitionedCall' operation
@@ -69,8 +73,8 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         for ndi in range(len(nd.input)):
             # remove the namespace 'StatefulPartitionedCall' of node input name
             if nd.input[ndi].split('/')[
-                0] == 'StatefulPartitionedCall':              \
-                nd.input[ndi] = '/'.join(nd.input[ndi].split('/')[1:])
+                0] == 'StatefulPartitionedCall': \
+                    nd.input[ndi] = '/'.join(nd.input[ndi].split('/')[1:])
         ni = list(nd.input)
         for n in ni:
             # if ni.split('/')[0] == '^StatefulPartitionedCall':
@@ -118,15 +122,16 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
 
     dynamic_graph_spc = gs.DynamicGraph(graph_def_spc)
     '''
-    tmp_tbdir_s = os.path.join(onnx_work_dir, "tf_board_data_s")  # for storing static graph after frozen
-    if os.path.isdir(tmp_tbdir_s):
-        subprocess.call(['rm', '-r', tmp_tbdir_s])
-    subprocess.call(['mkdir', '-p', tmp_tbdir_s])
+    if FOR_TENSORBOARD:
+        tmp_tbdir_s = os.path.join(onnx_work_dir, "tf_board_data_s")  # for storing static graph after frozen
+        if os.path.isdir(tmp_tbdir_s):
+            subprocess.call(['rm', '-r', tmp_tbdir_s])
+        subprocess.call(['mkdir', '-p', tmp_tbdir_s])
 
-    writer_s = tf.summary.create_file_writer(tmp_tbdir_s)
-    with writer_s.as_default():
-        #    tf.summary.graph(graph_def_spc)
-        tf.summary.graph(g_frozen_def)
+        writer_s = tf.summary.create_file_writer(tmp_tbdir_s)
+        with writer_s.as_default():
+            #    tf.summary.graph(graph_def_spc)
+            tf.summary.graph(g_frozen_def)
 
     '''
     all_noop_nodes = dynamic_graph_spc.find_nodes_by_op("NoOp")
@@ -192,15 +197,16 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     '''
     # dynamic_graph.forward_inputs(all_reshape_nodes)
 
-    tmp_tbdir_d_0 = os.path.join(onnx_work_dir,
-                                 "tf_board_data_d_0")  # for storing dynamic graph before insert TRT plugins
-    if os.path.isdir(tmp_tbdir_d_0):
-        subprocess.call(['rm', '-r', tmp_tbdir_d_0])
-    subprocess.call(['mkdir', '-p', tmp_tbdir_d_0])
+    if FOR_TENSORBOARD:
+        tmp_tbdir_d_0 = os.path.join(onnx_work_dir,
+                                     "tf_board_data_d_0")  # for storing dynamic graph before insert TRT plugins
+        if os.path.isdir(tmp_tbdir_d_0):
+            subprocess.call(['rm', '-r', tmp_tbdir_d_0])
+        subprocess.call(['mkdir', '-p', tmp_tbdir_d_0])
 
-    writer_d_0 = tf.summary.create_file_writer(tmp_tbdir_d_0)
-    with writer_d_0.as_default():
-        tf.summary.graph(dynamic_graph.as_graph_def())
+        writer_d_0 = tf.summary.create_file_writer(tmp_tbdir_d_0)
+        with writer_d_0.as_default():
+            tf.summary.graph(dynamic_graph.as_graph_def())
 
     '''
     tmp_tbdir_d = os.path.join(onnx_work_dir, "tf_board_data_d")  # for storing dynamic graph
@@ -383,6 +389,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     # nms_plugin.input.extend(["concat", "concat_1", "priorbox_concat"])
     # dynamic_graph.append(nms_plugin)
 
+    '''
     # create output plugin
     output_plugin = gs.create_node(
         name="output",
@@ -390,7 +397,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         dtype=tf.float32,
         # dtype=tf.uint8,
         shape=[1, 1, nms_config.max_total_detections, 7])
-
+    '''
     # output_plugin.input.extend([output_name])
     # dynamic_graph.append(output_plugin)
 
@@ -500,16 +507,17 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     print('---- the graphsurgeon tf ssd completed ----', '\n',
           '---- store the surged tf model to ', path_graph_pb, 'for onnx conversion ---- \n')
 
-    # dynamic_graph.write_tensorboard(tmp_tbdir_d)
-    # dynamic_graph.write(path_graph_pb)  # store the surged tf model
-    tmp_tbdir_d = os.path.join(onnx_work_dir, "tf_board_data_d")  # for storing dynamic graph
-    if os.path.isdir(tmp_tbdir_d):
-        subprocess.call(['rm', '-r', tmp_tbdir_d])
-    subprocess.call(['mkdir', '-p', tmp_tbdir_d])
+    if FOR_TENSORBOARD:
+        # dynamic_graph.write_tensorboard(tmp_tbdir_d)
+        # dynamic_graph.write(path_graph_pb)  # store the surged tf model
+        tmp_tbdir_d = os.path.join(onnx_work_dir, "tf_board_data_d")  # for storing dynamic graph
+        if os.path.isdir(tmp_tbdir_d):
+            subprocess.call(['rm', '-r', tmp_tbdir_d])
+        subprocess.call(['mkdir', '-p', tmp_tbdir_d])
 
-    writer_d = tf.summary.create_file_writer(tmp_tbdir_d)
-    with writer_d.as_default():
-        tf.summary.graph(dynamic_graph.as_graph_def())
+        writer_d = tf.summary.create_file_writer(tmp_tbdir_d)
+        with writer_d.as_default():
+            tf.summary.graph(dynamic_graph.as_graph_def())
 
     print('---- start onnx conversion with surged tf model ----')
 
