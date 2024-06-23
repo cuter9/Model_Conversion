@@ -4,8 +4,8 @@ This module implements the TrtSSD class.
 """
 
 import ctypes
-import os
-import subprocess
+# import os
+# import subprocess
 
 import numpy as np
 import cv2
@@ -15,6 +15,7 @@ import atexit
 
 # pycuda.autoinit is needed for initializing CUDA driver
 import pycuda.autoinit
+
 
 def _preprocess_trt(img, shape=(300, 300), m_type='uff'):
     """Preprocess an image before TRT SSD inferencing."""
@@ -87,7 +88,8 @@ def _postprocess_fpn_trt(img, out, conf_th, output_layout=7):
         clss.append(cls)
     return boxes, confs, clss
 
-def _postprocess_fpn_trt_enms(img, output, conf_th):        # using efficientNMS plugin
+
+def _postprocess_fpn_trt_enms(img, output, conf_th):  # using efficientNMS plugin
     """Postprocess TRT SSD output."""
     img_h, img_w, _ = img.shape
     boxes, confs, clss = output[1].tolist(), output[2].tolist(), output[3].tolist()
@@ -102,13 +104,13 @@ def _postprocess_fpn_trt_enms(img, output, conf_th):        # using efficientNMS
         conf = float(confs[d])
         if conf < conf_th:
             continue
-        y1 = int(boxes[4*d] * img_h)
-        x1 = int(boxes[4*d+1] * img_w)
-        y2 = int(boxes[4*d+2] * img_h)
-        x2 = int(boxes[4*d+3] * img_w)
+        y1 = int(boxes[4 * d] * img_h)
+        x1 = int(boxes[4 * d + 1] * img_w)
+        y2 = int(boxes[4 * d + 2] * img_h)
+        x2 = int(boxes[4 * d + 3] * img_w)
         cls = int(clss[d])
 
-        bs = ','.join(list(map(str, boxes[4*d:4*d+4])))
+        bs = ','.join(list(map(str, boxes[4 * d:4 * d + 4])))
         print("---- one detection ---- \n class: %d, confidence: %f, box: [%s] \n "
               % (clss[d], confs[d], bs))
         boxes_out.append((x1, y1, x2, y2))
@@ -186,8 +188,7 @@ class TrtSSD(object):
             if self.cuda_ctx:
                 self.cuda_ctx.pop()
 
-        atexit.register(self.destroy) # the destroy function is depreciated
-
+        atexit.register(self.destroy)  # the destroy function is depreciated
 
     def __del__(self):
         """Free CUDA memories and context."""
@@ -246,13 +247,13 @@ class TrtSSD(object):
                     output = ho
         '''
         output = self.host_outputs
-            # np.save(os.path.join(save_dir, name_ho.replace("/", "_")), ho)
-            # np.save(os.path.join(save_dir, "priorbox"), self.host_outputs[0])
-            # np.save(os.path.join(save_dir, "boxconf"), self.host_outputs[1])
-            # np.save(os.path.join(save_dir, "boxloc"), self.host_outputs[2])
-            # np.save(os.path.join(save_dir, "output_0"), self.host_outputs[3])
-            # np.save(os.path.join(save_dir, "output_1"), self.host_outputs[4])
-            # np.save(os.path.join(save_dir, "onnx", "input"), self.host_inputs[0])
+        # np.save(os.path.join(save_dir, name_ho.replace("/", "_")), ho)
+        # np.save(os.path.join(save_dir, "priorbox"), self.host_outputs[0])
+        # np.save(os.path.join(save_dir, "boxconf"), self.host_outputs[1])
+        # np.save(os.path.join(save_dir, "boxloc"), self.host_outputs[2])
+        # np.save(os.path.join(save_dir, "output_0"), self.host_outputs[3])
+        # np.save(os.path.join(save_dir, "output_1"), self.host_outputs[4])
+        # np.save(os.path.join(save_dir, "onnx", "input"), self.host_inputs[0])
         print("----- output of detection results ----- \n", output)
         if test_op:
             return
