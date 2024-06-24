@@ -406,7 +406,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
     namespace_plugin_map = {
         "MultiscaleGridAnchorGenerator": priorbox_concat_plugin,
         "Postprocessor": nms_plugin,
-        #        "Preprocessor": input_plugin,
+        "Preprocessor": input_plugin,
         "Cast": input_plugin,
         "input_tensor": input_plugin,
         "image_tensor": input_plugin,
@@ -434,7 +434,7 @@ def tf_ssd_fpn_graphsurgeon(path_tf_model=None, input_name=None, output_name=Non
         "Identity_7",
         # the embedded preprocess is different in TF diffenent model keep it to prevent the additional input image preorocess cause error
         # "Preprocessor",
-        "Preprocessor/stack_1",
+        # "Preprocessor/stack_1",
         "MultiscaleGridAnchorGenerator"
     }
 
