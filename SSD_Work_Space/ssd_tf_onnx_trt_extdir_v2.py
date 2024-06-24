@@ -28,14 +28,14 @@ FROZEN_GRAPH_NAME = 'saved_model.pb'        # for TF v2
 MODEL_NAME = "ssd_mobilenet_v2_320x320_coco17_tpu-8"
 # MODEL_NAME = "ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8"
 
-# MODEL_TRT = "ssd_mobilenet_v2_320x320_coco17_tpu-8_tf_v2"
+MODEL_TRT = "ssd_mobilenet_v2_320x320_coco17"
 # MODEL_TRT = "ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8_tf_v2"
-MODEL_TRT = "ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8"
+# MODEL_TRT = "ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8"
 
 WORK = os.getcwd()
 
 # DATA_REPO_DIR = os.path.join("../../", "Data_Repo/Model_Conversion/SSD_mobilenet")
-DATA_REPO_DIR = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion/SSD_mobilenet")
+DATA_REPO_DIR = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion", MODEL_NAME)
 # DATA_REPO_DIR = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion/SSD_mobilenet_FPN")
 os.makedirs(DATA_REPO_DIR, exist_ok=True)
 

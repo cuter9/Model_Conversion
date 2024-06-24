@@ -27,8 +27,8 @@ def _preprocess_trt(img, shape=(300, 300), m_type='uff'):
     img = img.transpose((2, 0, 1)).astype(np.float32)
     # else:
     # img = img.astype(np.float32)
-    # img *= (2.0 / 255.0)
-    # img -= 1.0
+    img *= (2.0 / 255.0)
+    img -= 1.0
     return img
 
 
