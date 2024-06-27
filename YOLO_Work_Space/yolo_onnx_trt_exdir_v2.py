@@ -27,7 +27,6 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_4_trt):
     onnx.save_model(onnx_model_proto_new, path_onnx_model_4_trt)
 
 
-
 def ssd_onnx_to_engine(path_onnx_model,
                        fp16_mode=True,
                        max_batch_size=1,
