@@ -12,6 +12,29 @@ MODEL_REPO_DIR = os.path.join(ONNX_WORK_SPACE, "Repo")
 TRT_INPUT_NAME = 'images'
 TRT_OUTPUT_NAME = 'nms'
 
+
+# -- convert yolov7 to onnx and then run this script to convert onnx to trt model
+# ref https://hackmd.io/_oaJhYNqTvyL_h01X1Fdmw?both
+# https://hackmd.io/@YungHuiHsu/BJL54lDy3
+# ref https://github.com/Monday-Leo/YOLOv7_Tensorrt
+
+# mkdir yolo
+# cd yolo
+# git clone https://github.com/WongKinYiu/yolov7
+# cd yolov7
+#
+# -- Download tiny weights
+# wget https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-tiny.pt
+# -- Download regular weights
+# wget https://github.com/WongKinYiu/yolov7/releases/download/v0.1 / yolov7.pt
+
+# -- install onnx-simplifier not listed in general yolov7 requirements.txt
+# pip3 install onnxsim
+#
+# -- Pytorch Yolov7 -> ONNX with grid, EfficientNMS plugin and dynamic batch size
+# python export.py --weights ./yolov7.pt --grid --end2end --dynamic-batch --simplify --topk-all 100 --iou-thres 0.65 --conf-thres 0.01 --img-size 640 640
+# -- Pytorch Yolov7 -> ONNX with grid, EfficientNMS plugin and static batch size
+# python export.py --weights ./yolov7.pt --grid --end2end  --simplify --topk-all 100 --iou-thres 0.65 --conf-thres 0.01 --img-size 640 640
 def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_4_trt):
     # ref : https://developer.nvidia.com/blog/estimating-depth-beyond-2d-using-custom-layers-on-tensorrt-and-onnx-models/
 

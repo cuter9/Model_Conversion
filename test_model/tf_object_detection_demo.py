@@ -17,6 +17,8 @@ from object_detection.utils import visualization_utils as viz_utils
 from object_detection.builders import model_builder
 import os
 from SSD_Work_Space.Utils.ssd_utils_v2 import download_model
+
+
 # from utils.visualization import BBoxVisualization
 # from utils.ssd_classes import get_cls_dict
 
@@ -55,18 +57,19 @@ def get_keypoint_tuples(eval_config):
         tuple_list.append((edge.start, edge.end))
     return tuple_list
 
+
 # Download the checkpoint and put it into models/research/object_detection/test_data/
 # @title Choose the model to use, then evaluate the cell.
-MODELS = {'ssd_mobilenet_2': 'ssd_mobilenet_v2_320x320_coco17_tpu-8',       # good with some mis-identified
-          'ssd_mobilenet_1': 'ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8',               # better than ssd_mobilenet_4
-          'ssd_mobilenet_3': 'ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8',           # fare good
-          'ssd_mobilenet_4': 'ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8',           # good but worse than ssd_mobilenet_1 may because this is lite version
+MODELS = {'ssd_mobilenet_2': 'ssd_mobilenet_v2_320x320_coco17_tpu-8',  # good with some mis-identified
+          'ssd_mobilenet_1': 'ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8',  # better than ssd_mobilenet_4
+          'ssd_mobilenet_3': 'ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8',  # fare good
+          'ssd_mobilenet_4': 'ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8',
+          # good but worse than ssd_mobilenet_1 may because this is lite version
           'ssd_resnet_50': 'ssd_resnet50_v1_fpn_640x640_coco17_tpu-8',
           'ssd_resnet_101': 'ssd_resnet101_v1_fpn_640x640_coco17_tpu-8',
-          'centernet_without_keypoints': 'centernet_hg104_512x512_coco17_tpu-8',        # good
-          'centernet_resnet50_v2': 'centernet_resnet50_v2_512x512_coco17_tpu-8',        # worst
-          'centernet_mobilenet_v2': 'centernet_mobilenetv2fpn_512x512_coco17_od'}       # very worts
-
+          'centernet_without_keypoints': 'centernet_hg104_512x512_coco17_tpu-8',  # good
+          'centernet_resnet50_v2': 'centernet_resnet50_v2_512x512_coco17_tpu-8',  # worst
+          'centernet_mobilenet_v2': 'centernet_mobilenetv2fpn_512x512_coco17_od'}  # very worts
 
 model_display_name = 'ssd_resnet_50'  # @param
 model_name = MODELS[model_display_name]
@@ -94,37 +97,40 @@ model_dir = os.path.join(TF_MODEL_DIR, model_name, 'checkpoint')
 # model_dir = os.path.join(TF_MODEL_DIR, 'centernet_mobilenetv2_fpn_od', 'checkpoint')
 
 
-
 # Load pipeline config and build a detection model
 configs = config_util.get_configs_from_pipeline_file(pipeline_config)
 model_config = configs['model']
 detection_model = model_builder.build(
-      model_config=model_config, is_training=False)
+    model_config=model_config, is_training=False)
 
 # Restore checkpoint
 ckpt = tf.compat.v2.train.Checkpoint(
-      model=detection_model)
+    model=detection_model)
 ckpt.restore(os.path.join(model_dir, 'ckpt-0')).expect_partial()
+
+
 # ckpt.restore(os.path.join(model_dir, 'ckpt-301')).expect_partial()
 
 def get_model_detection_function(model):
-  """Get a tf.function for detection."""
+    """Get a tf.function for detection."""
 
-  # @tf.function
-  def detect_fn(image):
-    """Detect objects in image."""
+    # @tf.function
+    def detect_fn(image):
+        """Detect objects in image."""
 
-    image, shapes = model.preprocess(image)
-    prediction_dict = model.predict(image, shapes)
-    detections = model.postprocess(prediction_dict, shapes)
+        image, shapes = model.preprocess(image)
+        prediction_dict = model.predict(image, shapes)
+        detections = model.postprocess(prediction_dict, shapes)
 
-    return detections, prediction_dict, tf.reshape(shapes, [-1])
+        return detections, prediction_dict, tf.reshape(shapes, [-1])
 
-  return detect_fn
+    return detect_fn
+
 
 detect_fn = get_model_detection_function(detection_model)
 
-configs['eval_input_config'].label_map_path = "/home/cuterbot/Documents/TensorFlow/models/research/object_detection/data/mscoco_label_map.pbtxt"
+configs[
+    'eval_input_config'].label_map_path = "/home/cuterbot/Documents/TensorFlow/models/research/object_detection/data/mscoco_label_map.pbtxt"
 label_map_path = configs['eval_input_config'].label_map_path
 label_map = label_map_util.load_labelmap(label_map_path)
 categories = label_map_util.convert_label_map_to_categories(
@@ -133,6 +139,7 @@ categories = label_map_util.convert_label_map_to_categories(
     use_display_name=True)
 category_index = label_map_util.create_category_index(categories)
 label_map_dict = label_map_util.get_label_map_dict(label_map, use_display_name=True)
+
 
 def main():
     import wget
@@ -176,14 +183,15 @@ def main():
         min_score_thresh=.50,
         agnostic_mode=False,
         line_thickness=2)
-        # keypoints=keypoints,
-        # keypoint_scores=keypoint_scores,
-        # keypoint_edges=get_keypoint_tuples(configs['eval_config']))
+    # keypoints=keypoints,
+    # keypoint_scores=keypoint_scores,
+    # keypoint_edges=get_keypoint_tuples(configs['eval_config']))
 
     matplotlib.use('TkAgg')
     plt.figure(figsize=(14, 18))
     plt.imshow(image_np_with_detections)
     plt.show()
+
 
 if __name__ == '__main__':
     main()
