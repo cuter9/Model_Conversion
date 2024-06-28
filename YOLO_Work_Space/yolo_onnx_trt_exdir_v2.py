@@ -72,7 +72,7 @@ def ssd_onnx_to_engine(path_onnx_model,
             print("\n\n------ trt starts parsing onnx model")
             # onnx.checker.check_model(path_onnx_model)
             # gm = onnx.load(path_onnx_model)
-            # unsupport_node = parser.supports_model(gm.SerializeToString())
+            # unsupported_node = parser.supports_model(gm.SerializeToString())
             # print(" --- the following node in onnx model is not supported by trt onnx parser: \n", unsupport_node)
 
             parser.parse_from_file(path_onnx_model)
