@@ -4,7 +4,8 @@ import onnx
 import onnx_graphsurgeon as gs_onnx
 
 MODEL_NAME = "yolo_v7"
-MODEL_TRT = "yolo_v7"
+# MODEL_TRT = "yolo_v7"
+MODEL_TRT = "yolo_v7-tiny"
 DATA_REPO_DIR = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion", MODEL_NAME)
 ONNX_WORK_SPACE = os.path.join(DATA_REPO_DIR, "ONNX_Model")
 MODEL_REPO_DIR = os.path.join(ONNX_WORK_SPACE, "Repo")
@@ -108,7 +109,7 @@ def ssd_onnx_to_engine(path_onnx_model,
 
 
 if __name__ == '__main__':
-    path_onnx_model = os.path.join(MODEL_REPO_DIR, "yolo_v7.onnx")
+    path_onnx_model = os.path.join(MODEL_REPO_DIR, MODEL_TRT + ".onnx")
     output_engine = os.path.join(MODEL_REPO_DIR, MODEL_TRT + ".engine")
     path_onnx_model_4_trt = os.path.join(MODEL_REPO_DIR, MODEL_TRT + "_new.onnx")
     redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_4_trt)
