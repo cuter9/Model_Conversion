@@ -6,3 +6,6 @@
 5. Install tensorflow-object-detection-api, ref. https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/install.html#tensorflow-object-detection-api-installation. The COCO is the depenence of tensorflow v2.X, if check it is installed, thus it would be no need to install COCO API for tensorflow v2.X. 
    > $ git clone https://github.com/tensorflow/models
 6. The installation of tensorflow-object-detection-api would change the dependence of tensorflow v2.9, thus it may need to reinstall tensorflow v2.9 built in step 1 to reestabilish the dependence.
+# Dependence of model conversion
+1. onnx >=1.16.2
+2. 
