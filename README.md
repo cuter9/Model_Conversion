@@ -1,4 +1,4 @@
-# Before converting TF model of v2.9 for Jetson Nano
+# Before converting object detection model of tensorflow v2.9 for Jetson Nano
 1. Install tensorflow v2.9 from source, referring to https://github.com/jkjung-avt/jetson_nano
 2. Install tensorflow addons v0.19 before installing tensorflow object detection package for for machine learning, with reference to https://qengineering.eu/install-tensorflow-addons-on-jetson-nano.html
    > $ wget https://github.com/tensorflow/addons/archive/refs/tags/v0.19.0.tar.gz && tar -xvf addons-0.19.0.tar.gz
