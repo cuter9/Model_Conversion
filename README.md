@@ -8,4 +8,4 @@
 6. The installation of tensorflow-object-detection-api would change the dependence of tensorflow v2.9, thus it may need to reinstall tensorflow v2.9 built in step 1 to reestabilish the dependence.
 # Dependence of model conversion
 1. onnx-1.16.2
-2. protobuf-5.27.3
+2. protobuf-3.20.3
