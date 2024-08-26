@@ -1,6 +1,6 @@
 # Before converting object detection model of tensorflow v2.9 for Jetson Nano
 1. Install tensorflow v2.9 from source, referring to https://github.com/jkjung-avt/jetson_nano
-2. Install tensorflow addons v0.19 before installing tensorflow object detection package for for machine learning, with reference to https://qengineering.eu/install-tensorflow-addons-on-jetson-nano.html
+2. Install tensorflow addons v0.17.1 before installing tensorflow object detection package for for machine learning, with reference to https://qengineering.eu/install-tensorflow-addons-on-jetson-nano.html
    > $ wget https://github.com/tensorflow/addons/archive/refs/tags/v0.19.0.tar.gz && tar -xvf addons-0.19.0.tar.gz
 4. Important Note:
    > a. There may be error during installing the addons as claimed in https://codeyarns.com/tech/2017-12-22-nvcc-argument-redefinition-error.html#gsc.tab=0, in this case, the script line "nvccopts += std_options" in the function "def InvokeNvc" should be comment out, the InvokeNvc function is in file "crosstool_wrapper_driver_is_not_gcc.tpl" of addons file folder "addons-0.19.0/build_deps/toolchains/gpu/crosstool/clang/bin/".
