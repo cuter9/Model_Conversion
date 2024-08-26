@@ -373,11 +373,13 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
     # output_nms_1 = gs_onnx.Variable(name="detection_boxes", dtype=np.float32)
     # output_nms_2 = gs_onnx.Variable(name="detection_scores", dtype=np.float32)
     # output_nms_3 = gs_onnx.Variable(name="detection_classes", dtype=np.float32)
-
+    output_nms_0 = gs_onnx.Variable(name="nms:0", dtype=np.float32)
+    output_nms_1 = gs_onnx.Variable(name="nms:1", dtype=np.float32)
     node_NMS_TRT.inputs[0] = node_boxloc_concat_reshape.outputs[0]
     node_NMS_TRT.inputs[2] = node_boxcon_concat_reshape.outputs[0]
     #                       node_priorbox_concat.outputs[0]]
 
+    node_NMS_TRT.outputs = [output_nms_0, output_nms_1]
     # node_NMS_TRT.outputs = [output_nms_0, output_nms_1, output_nms_2, output_nms_3]
     onnx_graph.outputs = node_NMS_TRT.outputs
     # onnx_graph.outputs.append(node_boxcon_concat_reshape.outputs[0])
@@ -430,6 +432,7 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
             else:
                 n.outputs[0].dtype = np.float32
                 nd_out.append(n.outputs[0])
+
         onnx_graph.outputs.extend(nd_out)
 
         # ----the follow script should be commented if not testing convolution

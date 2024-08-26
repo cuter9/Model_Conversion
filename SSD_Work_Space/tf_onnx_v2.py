@@ -77,6 +77,7 @@ def convtf2onnx(path_graph_pb, path_onnx_model, input_names, output_names):
 
     # for redef_onnx_node_4_trt_plugin function
     input_names = ["input:0"]
+    #    output_names = ["nms:0", "nms:1"]        # for NMS TRT plugin
     output_names = ["nms:0"]        # for NMS TRT plugin
     # output_names = ["nms:0", "nms:1", "nms:2", "nms:3"]   # for efficientNMS TRT plugin
     # with tf.compat.v1.Session() as sess:
