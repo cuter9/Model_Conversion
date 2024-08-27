@@ -31,8 +31,8 @@ if os.path.isdir(TEST_DIR):
     subprocess.call(['rm', '-r', TEST_DIR])
 subprocess.call(['mkdir', '-p', TEST_DIR])
 
-# FPN = True
-FPN = False
+FPN = True
+# FPN = False
 # os.makedirs(TEST_DIR, exist_ok=True)
 
 # PATH_TRT_MODEL_from_ONNX = "/home/cuterbot/Model_Conversion/SSD_Work_Space/ONNX_Model/Repo/ssd_mobilenet_v2_coco.engine"
