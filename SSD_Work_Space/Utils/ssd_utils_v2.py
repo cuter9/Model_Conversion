@@ -2,6 +2,7 @@ import ctypes
 import numpy as np
 import os
 import subprocess
+import gdown
 
 
 def download_model(model_name, model_dir):
@@ -14,7 +15,9 @@ def download_model(model_name, model_dir):
     model_file = model_name + ".tar.gz"
     # Ref. 1 : the path to download the model from Tensorflow web can be found in TF1 Model Zoo as following :
     #           https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf1_detection_zoo.md
-    # Ref. 2 :  TensorFlow 2 Object Detection API tutorial
+    # Ref. 2 : the path to download the model from Tensorflow web can be found in TF2 Model Zoo as following :
+    #           https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2_detection_zoo.md
+    # Ref. 3 :  TensorFlow 2 Object Detection API tutorial
     #           https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/install.html#downloading-the-tensorflow-model-garden
 #    download_base = 'http://download.tensorflow.org/models/object_detection/'      # base of tf v1 models
     download_base = 'http://download.tensorflow.org/models/object_detection/tf2/20200711/'
@@ -30,8 +33,10 @@ def download_model(model_name, model_dir):
             # opener = urllib.request.URLopener()
             # opener.retrieve(download_base + model_file, model_file_path)
             url = download_base + model_file
-            wget.download(url, model_file_path)
-            # print(url)
+            # wget.download(url, model_file_path)
+            gdown.download(url, model_file_path)
+
+        # print(url)
         print('{} not found. Extract it now.'.format(model_dir_path))
         tar_file = tarfile.open(model_file_path)
         tar_file.extractall(path=model_dir)
