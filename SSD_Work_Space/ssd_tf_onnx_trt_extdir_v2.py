@@ -8,10 +8,11 @@ import tensorrt as trt
 import onnx
 import onnx_graphsurgeon as gs_onnx
 
-from tf_onnx import convtf2onnx, load_customer_op
+from tf_onnx_v2 import convtf2onnx, load_customer_op
 from Utils.ssd_utils_v2 import load_config, tf_saved2frozen, get_feature_map_shape, download_model
 
 from tf_graphsurgeon_v2 import tf_graphsurgeon as tf_gs
+
 # from tf_graphsurgeon_v2_fpn import tf_ssd_fpn_graphsurgeon as tf_gs
 
 faulthandler.enable()
@@ -19,7 +20,7 @@ faulthandler.enable()
 TRT_INPUT_NAME = 'input'
 TRT_OUTPUT_NAME = 'nms'
 # FROZEN_GRAPH_NAME = 'frozen_inference_graph.pb'   # for TF v1
-FROZEN_GRAPH_NAME = 'saved_model.pb'        # for TF v2
+FROZEN_GRAPH_NAME = 'saved_model.pb'  # for TF v2
 
 # MODEL_NAME = "ssd_mobilenet_v1_coco_2018_01_28"
 # MODEL_NAME = "ssd_mobilenet_v2_coco_2018_03_29"     # tf v1 model
@@ -50,10 +51,11 @@ TMP_PB_GRAPH_NAME = MODEL_NAME + "_4_onnx_conv.pb"
 TF_MODEL_DIR = os.path.join(DATA_REPO_DIR, "TF_Model")
 os.makedirs(TF_MODEL_DIR, exist_ok=True)
 
-TMP_MODEL = os.path.join(TF_MODEL_DIR, "Exported_Model", "saved_model")     # for TF v2
+TMP_MODEL = os.path.join(TF_MODEL_DIR, "Exported_Model", "saved_model")  # for TF v2
 os.makedirs(TMP_MODEL, exist_ok=True)
 
-TF_CUSTOM_OP = os.path.join(WORK, "tensorflow_trt_op/python3/ops/set")  # the path stores the trt custom op for tf parsing
+TF_CUSTOM_OP = os.path.join(WORK,
+                            "tensorflow_trt_op/python3/ops/set")  # the path stores the trt custom op for tf parsing
 # TF_CUSTOM_OP = os.path.join(WORK, "tensorflow_trt_op/python3/ops_fpn/set")  # the path stores the trt custom op for tf parsing
 
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"
@@ -65,7 +67,6 @@ os.environ['MODEL_REPO_DIR'] = MODEL_REPO_DIR
 
 def ssd_pipeline_to_onnx(checkpoint_path, config_path,
                          path_graph_pb, path_onnx_model, path_onnx_model_1, tmp_dir=TMP_MODEL):
-
     print('---- start converting tf ssd to onnx model ----')
     print('---- start graphsurgeon tf ssd for onnx model conversion----')
 
@@ -80,11 +81,12 @@ def ssd_pipeline_to_onnx(checkpoint_path, config_path,
     # surge the TF model Graph for ONNX model conversion
     path_tf_model = os.path.join(TF_MODEL_DIR, MODEL_NAME)  # the tensorflow model downloaded from TF 2.0 model zoo
 
-    input_name, output_name, path_tf_custom_op = tf_gs(path_tf_model = path_tf_model,
-                                                       input_name=TRT_INPUT_NAME, output_name=TRT_OUTPUT_NAME,
-                                                       onnx_work_dir=ONNX_WORK_SPACE,
-                                                       path_graph_pb=path_graph_pb, # the path stores the model graph def pb file
-                                                       path_tf_custom_op=TF_CUSTOM_OP)  # the path stores the TF custom op for TF to ONNX model graph conversion
+    input_names, output_names, path_tf_custom_op = tf_gs(path_tf_model=path_tf_model,
+                                                         input_name=TRT_INPUT_NAME, output_name=TRT_OUTPUT_NAME,
+                                                         onnx_work_dir=ONNX_WORK_SPACE,
+                                                         path_graph_pb=path_graph_pb,
+                                                         # the path stores the model graph def pb file
+                                                         path_tf_custom_op=TF_CUSTOM_OP)  # the path stores the TF custom op for TF to ONNX model graph conversion
 
     # load custom ops need for conversion from tf model to onnx model when "parsing with tf backend" is needed
     # the custom ops can be constructed by the makefile in dir /tensorflow_trt_op
@@ -95,7 +97,7 @@ def ssd_pipeline_to_onnx(checkpoint_path, config_path,
     print('---- start onnx conversion with surged tf model ----')
 
     path_onnx_model_0 = path_onnx_model.split(".")[0] + "_0.onnx"
-    path_onnx_model_1_0 = path_onnx_model_1.split(".")[0] + "_0.onnx"
+    # path_onnx_model_1_0 = path_onnx_model_1.split(".")[0] + "_0.onnx"
     # path_onnx_model_0:    file name for model which nodes are prefixed without "import/"; but
     #                       the BatchNormalization op need too many input with additional op
     # path_onnx_model_1_0:  file name for model which nodes  prefixed with "import/"; and
@@ -103,18 +105,18 @@ def ssd_pipeline_to_onnx(checkpoint_path, config_path,
     #                       to NCHW format for nodes input, thus this ONNX model is not good for performance
     # onnx_model_proto_0 : model of path_onnx_model_0
     # onnx_model_proto_1_0 : model of path_onnx_model_0_1
-    onnx_model_proto_0, onnx_model_proto_1_0 = convtf2onnx(path_graph_pb=path_graph_pb,
-                                                           path_onnx_model=path_onnx_model_0,
-                                                           path_onnx_model_1=path_onnx_model_1_0,
-                                                           input_name=input_name,
-                                                           output_name=output_name)
+    onnx_model_proto_0 = convtf2onnx(path_graph_pb=path_graph_pb,
+                                     path_onnx_model=path_onnx_model_0,
+                                     input_names=input_names,
+                                     output_names=output_names)
 
     print("---- modify the attributes of onnx model for ONNX parsing. ---- \n")
     # onnx_model_proto = onnx.load(path_onnx_model, format='protobuf')
     rev_onnx_attr(onnx_model_proto_0)
     onnx.save_model(onnx_model_proto_0, path_onnx_model)
-
     onnx_graph = gs_onnx.import_onnx(onnx_model_proto_0)
+
+    '''
     nd_bn = [n for n in onnx_graph.nodes if n.op == "BatchNormalization"]
 
     print("---- modify the attributes of onnx model 1 for ONNX parsing.  ----\n")
@@ -137,6 +139,7 @@ def ssd_pipeline_to_onnx(checkpoint_path, config_path,
                 n0.inputs[2] = n1.inputs[2]
                 n0.inputs[3] = n1.inputs[3]
                 n0.inputs[4] = n1.inputs[4]
+    '''
 
     onnx_graph.cleanup().toposort()
     onnx_model_proto_new = gs_onnx.export_onnx(onnx_graph)
@@ -170,14 +173,16 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
     onnx_model_proto = onnx.load(path_onnx_model, format='protobuf')
     onnx_graph = gs_onnx.import_onnx(onnx_model_proto)
 
+#     nodes_reshape_conf = [nd for nd in onnx_graph.nodes
+#                          if nd.op == "Reshape" and nd.name.split("/", 1)[1].split('_')[0] == "ConvolutionalClassHead"]
     nodes_reshape_conf = [nd for nd in onnx_graph.nodes
-                          if nd.op == "Reshape" and nd.name.split("/", 1)[1].split('_')[0] == "ConvolutionalClassHead"]
+                          if nd.op == "Reshape" and "ConvolutionalClassHead" in nd.name]
     for nd in nodes_reshape_conf:
         nd.inputs[1].values = np.array([1, -1, 1, 91])
 
     # insert transpose after BoxPredictor_5 boxconf
-#    node_to_boxconf_5_trnsp = [nd for nd in onnx_graph.nodes
-#                               if nd.name == "BoxPredictor_5/ClassPredictor/BiasAdd"][0]
+    #    node_to_boxconf_5_trnsp = [nd for nd in onnx_graph.nodes
+    #                               if nd.name == "BoxPredictor_5/ClassPredictor/BiasAdd"][0]
     node_to_boxconf_5_trnsp = [nd for nd in onnx_graph.nodes
                                if nd.name == "BoxPredictor/ConvolutionalClassHead_5/ClassPredictor/BiasAdd"][0]
     input_boxconf_5_trnsp = node_to_boxconf_5_trnsp.outputs[0]
@@ -188,13 +193,14 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
                                         outputs=[output_boxconf_5_trnsp]
                                         )
     onnx_graph.nodes.append(node_boxconf_5_trnsp)
-#    node_reshape_boxconf_5 = [nd for nd in onnx_graph.nodes if nd.name == "BoxPredictor_5/Reshape_1"][0]
-    node_reshape_boxconf_5 = [nd for nd in onnx_graph.nodes if nd.name == "BoxPredictor/ConvolutionalClassHead_5/Reshape"][0]
+    #    node_reshape_boxconf_5 = [nd for nd in onnx_graph.nodes if nd.name == "BoxPredictor_5/Reshape_1"][0]
+    node_reshape_boxconf_5 = \
+    [nd for nd in onnx_graph.nodes if nd.name == "BoxPredictor/ConvolutionalClassHead_5/Reshape"][0]
     node_reshape_boxconf_5.inputs[0] = node_boxconf_5_trnsp.outputs[0]
 
     # insert transpose after BoxPredictor_5 boxloc
-#    node_to_boxloc_5_trnsp = [nd for nd in onnx_graph.nodes
-#                              if nd.name == "BoxPredictor_5/BoxEncodingPredictor/BiasAdd"][0]
+    #    node_to_boxloc_5_trnsp = [nd for nd in onnx_graph.nodes
+    #                              if nd.name == "BoxPredictor_5/BoxEncodingPredictor/BiasAdd"][0]
     node_to_boxloc_5_trnsp = [nd for nd in onnx_graph.nodes
                               if nd.name == "BoxPredictor/ConvolutionalBoxHead_5/BoxEncodingPredictor/BiasAdd"][0]
     input_boxloc_5_trnsp = node_to_boxloc_5_trnsp.outputs[0]
@@ -206,7 +212,8 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new):
                                        )
     onnx_graph.nodes.append(node_boxloc_5_trnsp)
     # node_reshape_boxloc_5 = [nd for nd in onnx_graph.nodes if nd.name == "BoxPredictor_5/Reshape"][0]
-    node_reshape_boxloc_5 = [nd for nd in onnx_graph.nodes if nd.name == "BoxPredictor/ConvolutionalBoxHead_5/Reshape"][0]
+    node_reshape_boxloc_5 = [nd for nd in onnx_graph.nodes if nd.name == "BoxPredictor/ConvolutionalBoxHead_5/Reshape"][
+        0]
     node_reshape_boxloc_5.inputs[0] = node_boxloc_5_trnsp.outputs[0]
 
     # node_GridAnchor_TRT, add dummy input
@@ -496,7 +503,8 @@ def ssd_onnx_to_engine(path_onnx_model,
 if __name__ == '__main__':
     download_model(MODEL_NAME, TF_MODEL_DIR)
     # checkpoint_path = os.path.join(TF_MODEL_DIR, MODEL_NAME, "model.ckpt")    # the ckpt path of TF v1
-    checkpoint_path = os.path.join(TF_MODEL_DIR, MODEL_NAME, "checkpoint")      # the ckpt director of TF v2, refer to tf.train.checkpoint_management.py
+    checkpoint_path = os.path.join(TF_MODEL_DIR, MODEL_NAME,
+                                   "checkpoint")  # the ckpt director of TF v2, refer to tf.train.checkpoint_management.py
     config_path = os.path.join(TF_MODEL_DIR, MODEL_NAME, "pipeline.config")
     output_engine = os.path.join(MODEL_REPO_DIR, MODEL_TRT + ".engine")
 
@@ -511,8 +519,8 @@ if __name__ == '__main__':
     path_onnx_model_new = os.path.join(MODEL_REPO_DIR, MODEL_NAME + "_new.onnx")
     redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_new)  # redefine the trt plugin nodes
 
-#     path_onnx_model_new_1 = os.path.join(MODEL_REPO_DIR, MODEL_NAME + "_1_new.onnx")
-#    redef_onnx_node_4_trt_plugin_1(path_onnx_model_1, path_onnx_model_new_1)  # redefine the trt plugin nodes
+    #     path_onnx_model_new_1 = os.path.join(MODEL_REPO_DIR, MODEL_NAME + "_1_new.onnx")
+    #    redef_onnx_node_4_trt_plugin_1(path_onnx_model_1, path_onnx_model_new_1)  # redefine the trt plugin nodes
     # path_onnx_model = path_onnx_model_new
     # onnx.save_model(onnx_model_proto_new, path_onnx_model_new)
 
