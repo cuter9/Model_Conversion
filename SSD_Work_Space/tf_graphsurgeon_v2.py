@@ -20,7 +20,7 @@ def tf_graphsurgeon(path_tf_model=None, input_name=None, output_name=None,
 
     # get input shape
     channels = 3
-    height = config.model.ssd.image_resizer.fixed_shape_resizer.height
+    height = config.model.ssd.image_resizer.fixed_shape_resizer.height      # default in tf model config is 300*300
     width = config.model.ssd.image_resizer.fixed_shape_resizer.width
 
     saved_model = tf.saved_model.load(os.path.join(path_tf_model, 'saved_model'))
