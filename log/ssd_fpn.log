@@ -1,9 +1,16 @@
-^C^C^C^C^C^C^CTraceback (most recent call last):
-  File "/home/cuterbot/Model_Conversion/SSD_Work_Space/ssd_tf_onnx_trt_extdir_v2_fpn.py", line 8, in <module>
-    import tensorrt as trt
-  File "/usr/local/lib/python3.8/dist-packages/tensorrt/__init__.py", line 34, in <module>
-    try_load(lib)
-  File "/usr/local/lib/python3.8/dist-packages/tensorrt/__init__.py", line 26, in try_load
-    ctypes.CDLL(library)
-  File "/usr/lib/python3.8/ctypes/__init__.py", line 373, in __init__
-^CKeyboardInterrupt
+^C^C^C^C^CTraceback (most recent call last):
+  File "/home/cuterbot/Model_Conversion/SSD_Work_Space/ssd_tf_onnx_trt_extdir_v2_fpn.py", line 12, in <module>
+    from tf_onnx_v2 import convtf2onnx, load_customer_op
+  File "/home/cuterbot/Model_Conversion/SSD_Work_Space/tf_onnx_v2.py", line 9, in <module>
+    import tf2onnx
+  File "/home/cuterbot/.local/lib/python3.8/site-packages/tf2onnx/__init__.py", line 10, in <module>
+    from . import verbose_logging as logging
+  File "/home/cuterbot/.local/lib/python3.8/site-packages/tf2onnx/verbose_logging.py", line 14, in <module>
+    import tensorflow as tf
+  File "/usr/local/lib/python3.8/dist-packages/tensorflow/__init__.py", line 37, in <module>
+    from tensorflow.python.tools import module_util as _module_util
+  File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/__init__.py", line 36, in <module>
+    from tensorflow.python import pywrap_tensorflow as _pywrap_tensorflow
+  File "/usr/local/lib/python3.8/dist-packages/tensorflow/python/pywrap_tensorflow.py", line 62, in <module>
+    from tensorflow.python._pywrap_tensorflow_internal import *
+KeyboardInterrupt

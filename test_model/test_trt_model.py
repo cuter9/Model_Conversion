@@ -55,8 +55,10 @@ PATH_TRT_MODEL_from_UFF = os.path.join(DATA_REPO_DIR, "UFF_Model/Repo/", engine_
 WINDOW_NAME = 'TrtSsdModelTest'
 
 if FPN:
-    INPUT_HW = (320, 320)   # "ssd_mobilenet_v2_fpn_320x320_coco.engine"
-    # INPUT_HW = (640, 640)   # "ssd_mobilenet_v2_fpn_640x640_coco.engine"
+    if "320x320" in engine_name:
+        INPUT_HW = (320, 320)   # "ssd_mobilenet_v2_fpn_320x320_coco.engine"
+    elif "640x640" in engine_name:
+        INPUT_HW = (640, 640)   # "ssd_mobilenet_v2_fpn_640x640_coco.engine"
 else:
     INPUT_HW = (300, 300)   # "ssd_mobilenet_v2_coco.engine"
 
@@ -82,7 +84,7 @@ def verify_trt_model(path_model, model_type):
     test_op = False
 
     # boxes: [[x_min_object_box, y_min_object_box, x_max_object_box, y_max_object_box], []] for draw
-    boxes, confs, clss = trt_ssd.detect(img_handle, model_type, test_op, fpn=FPN, conf_th=0.5)
+    boxes, confs, clss = trt_ssd.detect(img_handle, model_type, test_op, fpn=FPN, conf_th=0.2)
     img_handle = vis.draw_bboxes(img_handle, boxes, confs, clss)
     cv2.imshow(WINDOW_NAME, img_handle)
     while True:
