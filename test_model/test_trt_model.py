@@ -47,6 +47,7 @@ if FPN:
     PATH_TRT_MODEL_from_ONNX = os.path.join(DATA_REPO_DIR_FPN, "ONNX_Model/Repo", engine_name)
 else:
     engine_name = "ssd_mobilenet_v2_320x320_coco17.engine"
+    # engine_name = "ssd_mobilenet_v2_coco_onnx.engine"
     PATH_TRT_MODEL_from_ONNX = os.path.join(DATA_REPO_DIR, "ONNX_Model/Repo", engine_name)
 
 PATH_TRT_MODEL_from_UFF = os.path.join(DATA_REPO_DIR, "UFF_Model/Repo/", engine_name)
