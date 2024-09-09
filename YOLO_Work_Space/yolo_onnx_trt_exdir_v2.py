@@ -15,12 +15,14 @@ MODEL_REPO_DIR = os.path.join(ONNX_WORK_SPACE, "Repo")
 TRT_INPUT_NAME = 'images'
 TRT_OUTPUT_NAME = 'nms'
 
-
 # -- convert yolov7 to onnx and then run this script to convert onnx to trt model
 # ref https://hackmd.io/_oaJhYNqTvyL_h01X1Fdmw?both
 # https://hackmd.io/@YungHuiHsu/BJL54lDy3
 # ref https://github.com/Monday-Leo/YOLOv7_Tensorrt
+
 subprocess.run("./yolo_v7_2_onnx.sh")
+
+
 # mkdir yolo
 # cd yolo
 # git clone https://github.com/WongKinYiu/yolov7
