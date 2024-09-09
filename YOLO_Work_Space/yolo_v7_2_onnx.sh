@@ -28,7 +28,8 @@ cd yolo_v7
 # python3 export.py --weights ./yolo_v7.pt --grid --end2end --dynamic-batch --simplify --topk-all 100 --iou-thres 0.65 --conf-thres 0.01 --img-size 640 640
 # -- Pytorch Yolov7 -> ONNX with grid, EfficientNMS plugin and static batch size
 if [ ! -f "./yolo_v7.onnx" ]; then
-  python3 export.py --weights ./yolo_v7.pt --grid --end2end  --simplify --topk-all 100 --iou-thres 0.65 --conf-thres 0.01 --img-size 640 640
+  python3 export.py --weights ./yolo_v7.pt --grid --end2end --dynamic-batch --simplify --topk-all 100 --iou-thres 0.65 --conf-thres 0.01 --img-size 640 640
+  # python3 export.py --weights ./yolo_v7.pt --grid --end2end  --simplify --topk-all 100 --iou-thres 0.65 --conf-thres 0.01 --img-size 640 640
 fi
 # shellcheck disable=SC2016
 if [ ! -d "$HOME/Data_Repo/Model_Conversion/yolo_v7/ONNX_Model/Repo" ]; then
@@ -37,7 +38,8 @@ fi
 cp ./yolo_v7.onnx $HOME/Data_Repo/Model_Conversion/yolo_v7/ONNX_Model/Repo/
 
 if [ ! -f "./yolo_v7-tiny.onnx" ]; then
-  python3 export.py --weights ./yolo_v7-tiny.pt --grid --end2end  --simplify --topk-all 100 --iou-thres 0.65 --conf-thres 0.01 --img-size 640 640
+  python3 export.py --weights ./yolo_v7-tiny.pt --grid --end2end --dynamic-batch --simplify --topk-all 100 --iou-thres 0.65 --conf-thres 0.01 --img-size 640 640
+  # python3 export.py --weights ./yolo_v7-tiny.pt --grid --end2end  --simplify --topk-all 100 --iou-thres 0.65 --conf-thres 0.01 --img-size 640 640
 fi
 # shellcheck disable=SC2016
 if [ ! -d "$HOME/Data_Repo/Model_Conversion/yolo_v7-tiny/ONNX_Model/Repo" ]; then
