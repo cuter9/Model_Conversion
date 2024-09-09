@@ -5,7 +5,8 @@ import onnx_graphsurgeon as gs_onnx
 
 MODEL_NAME = "yolo_v7"
 # MODEL_TRT = "yolo_v7"
-MODEL_TRT = "yolo_v7-tiny"
+MODEL_TRT = "yolo_v7"
+# MODEL_TRT = "yolo_v7-tiny"
 DATA_REPO_DIR = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion", MODEL_NAME)
 ONNX_WORK_SPACE = os.path.join(DATA_REPO_DIR, "ONNX_Model")
 MODEL_REPO_DIR = os.path.join(ONNX_WORK_SPACE, "Repo")
@@ -27,7 +28,7 @@ TRT_OUTPUT_NAME = 'nms'
 # -- Download tiny weights
 # wget https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-tiny.pt
 # -- Download regular weights
-# wget https://github.com/WongKinYiu/yolov7/releases/download/v0.1 / yolov7.pt
+# wget https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7.pt
 
 # -- install onnx-simplifier not listed in general yolov7 requirements.txt
 # pip3 install onnxsim
