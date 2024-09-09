@@ -2,11 +2,12 @@ import tensorrt as trt
 import os
 import onnx
 import onnx_graphsurgeon as gs_onnx
+import subprocess
 
-MODEL_NAME = "yolo_v7"
+# MODEL_NAME = "yolo_v7"
+MODEL_NAME = "yolo_v7-tiny"
 # MODEL_TRT = "yolo_v7"
-MODEL_TRT = "yolo_v7"
-# MODEL_TRT = "yolo_v7-tiny"
+MODEL_TRT = "yolo_v7-tiny"
 DATA_REPO_DIR = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion", MODEL_NAME)
 ONNX_WORK_SPACE = os.path.join(DATA_REPO_DIR, "ONNX_Model")
 MODEL_REPO_DIR = os.path.join(ONNX_WORK_SPACE, "Repo")
@@ -19,7 +20,7 @@ TRT_OUTPUT_NAME = 'nms'
 # ref https://hackmd.io/_oaJhYNqTvyL_h01X1Fdmw?both
 # https://hackmd.io/@YungHuiHsu/BJL54lDy3
 # ref https://github.com/Monday-Leo/YOLOv7_Tensorrt
-
+subprocess.run("./yolo_v7_2_onnx.sh")
 # mkdir yolo
 # cd yolo
 # git clone https://github.com/WongKinYiu/yolov7
