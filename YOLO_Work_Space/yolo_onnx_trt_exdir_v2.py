@@ -143,5 +143,5 @@ if __name__ == '__main__':
     if not os.path.exists(test_img):
         wget.download("http://images.cocodataset.org/val2017/000000088462.jpg", out=test_img)
 
-    subprocess.run("python3 ./test_yolo.py --trt_engine %s --source %s" % (output_engine, test_img))
+    subprocess.run("python3 ./test_yolo_model.py --trt_engine %s --source %s" % (output_engine, test_img))
     '''
