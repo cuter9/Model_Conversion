@@ -168,8 +168,8 @@ if __name__ == '__main__':
         wget.download("http://images.cocodataset.org/val2017/000000088462.jpg", out=test_img)
     opt.source = test_img
 
-    opt.trt_engine = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion/yolov7-tiny/ONNX_Model/Repo/yolov7-tiny.engine")
-    # opt.trt_engine = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion/yolov7/ONNX_Model/Repo/yolov7.engine")
+    # opt.trt_engine = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion/yolov7-tiny/ONNX_Model/Repo/yolov7-tiny.engine")
+    opt.trt_engine = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion/yolov7/ONNX_Model/Repo/yolov7.engine")
 
     opt.conf_thres = 0.5
     # opt.save_txt = True
