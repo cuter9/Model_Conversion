@@ -4,10 +4,12 @@ import onnx
 import onnx_graphsurgeon as gs_onnx
 import subprocess
 
-MODEL_NAME = "yolo_v7"
-# MODEL_NAME = "yolo_v7-tiny"
-MODEL_TRT = "yolo_v7"#
-# MODEL_TRT = "yolo_v7-tiny"
+import wget
+
+MODEL_NAME = "yolov7"
+# MODEL_NAME = "yolov7-tiny"
+MODEL_TRT = "yolov7"
+# MODEL_TRT = "yolov7-tiny"
 DATA_REPO_DIR = os.path.join(os.environ['HOME'], "Data_Repo/Model_Conversion", MODEL_NAME)
 ONNX_WORK_SPACE = os.path.join(DATA_REPO_DIR, "ONNX_Model")
 MODEL_REPO_DIR = os.path.join(ONNX_WORK_SPACE, "Repo")
@@ -20,7 +22,7 @@ TRT_OUTPUT_NAME = 'nms'
 # https://hackmd.io/@YungHuiHsu/BJL54lDy3
 # ref https://github.com/Monday-Leo/YOLOv7_Tensorrt
 
-subprocess.run("./yolo_v7_2_onnx.sh")
+subprocess.run("./yolov7_2_onnx.sh")
 
 # mkdir yolo
 # cd yolo
@@ -46,11 +48,11 @@ def redef_onnx_node_4_trt_plugin(path_onnx_model, path_onnx_model_4_trt):
     onnx_model_proto = onnx.load(path_onnx_model, format='protobuf')
     onnx_graph = gs_onnx.import_onnx(onnx_model_proto)
 
-    node_NMS_TRT = [nd for nd in onnx_graph.nodes if nd.name == "/end2end/EfficientNMS_TRT"][0]
-    # node_NMS_TRT = [nd for nd in onnx_graph.nodes if nd.name == "batched_nms"][0]
+    # node_NMS_TRT = [nd for nd in onnx_graph.nodes if nd.name == "/end2end/EfficientNMS_TRT"][0]
+    node_NMS_TRT = [nd for nd in onnx_graph.nodes if nd.name == "batched_nms"][0]
     # The  score output from EfficientNMS_TRT needs sigmoid function,
     # but this is a bug in the onnx model directly converted from the github source!
-    node_NMS_TRT.attrs["score_activation"] = 1
+    # node_NMS_TRT.attrs["score_activation"] = 1
     onnx_graph.outputs = node_NMS_TRT.outputs
     onnx_graph.cleanup().toposort()
 
@@ -134,3 +136,12 @@ if __name__ == '__main__':
     with open(output_engine, 'wb') as f:
         f.write(buf)
         f.close()
+
+    '''
+    TEST_DIR = os.path.join(os.environ["HOME"], "Downloads/yolo/yolov7/inference/images")
+    test_img = os.path.join(TEST_DIR, "test.jpg")
+    if not os.path.exists(test_img):
+        wget.download("http://images.cocodataset.org/val2017/000000088462.jpg", out=test_img)
+
+    subprocess.run("python3 ./test_yolo.py --trt_engine %s --source %s" % (output_engine, test_img))
+    '''

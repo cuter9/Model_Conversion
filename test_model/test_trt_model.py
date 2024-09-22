@@ -25,7 +25,7 @@ DATA_REPO_DIR_FPN = os.path.join(os.environ["HOME"], "Data_Repo/Model_Conversion
 # DATA_REPO_DIR_FPN = os.path.join(os.environ["HOME"], "Data_Repo/Model_Conversion/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8")
 # DATA_REPO_DIR_FPN = os.path.join(os.environ["HOME"], "Data_Repo/Model_Conversion/ssd_resnet152_v1_fpn_640x640_coco17_tpu-8")
 
-TEST_DIR = os.path.join(DATA_REPO_DIR, "Test Data")
+TEST_DIR = os.path.join(os.environ["HOME"], "Data_Repo/Model_Conversion", "Test Data")
 
 if os.path.isdir(TEST_DIR):
     subprocess.call(['rm', '-r', TEST_DIR])
